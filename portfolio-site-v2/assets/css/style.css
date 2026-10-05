@@ -305,8 +305,9 @@ p { text-wrap: pretty; }
 .hh-pill:active, .hh-pill.held { transform: translate(-50%, calc(-50% + 0.4cqw)); box-shadow: 0 0.15cqw 0 #8e8e8a, inset 0 0.3cqw 0 rgb(255 255 255 / 0.1); }
 
 /* Chaveiro: alça na lateral do console (no celular, um ilhós no canto) e o chaveiro pendurado nela.
-   O ponto de giro é o topo do mosquetão: 58% da largura e 3% da altura da imagem. */
-.toy { --kc-w: 42cqw; --lug-x: 102cqw; --lug-y: 108cqw; --kc-rest: -10deg; }
+   O ponto de giro é o topo da argola: --kc-px e --kc-py, em fração da imagem (430x604, proporção --kc-ar).
+   --kc-rest é o ângulo em que o peso fica embaixo do ponto de giro. */
+.toy { --kc-w: 38cqw; --lug-x: 102cqw; --lug-y: 108cqw; --kc-rest: 5deg; --kc-px: 0.434; --kc-py: 0.015; --kc-ar: 1.405; }
 .hh-lug {
   position: absolute; left: calc(100% - 0.5cqw); top: calc(var(--lug-y) - 4.5cqw); width: 5.6cqw; height: 9cqw;
   border: 1.9cqw solid #b9b9b4; border-left: 0; border-radius: 0 4.5cqw 4.5cqw 0;
@@ -315,18 +316,18 @@ p { text-wrap: pretty; }
 .keychain { position: absolute; inset: 0; z-index: 3; pointer-events: none; filter: drop-shadow(0 1px 1px rgb(0 0 0 / 0.28)) drop-shadow(0 10px 12px rgb(30 40 60 / 0.22)); }
 .kc-anchor { position: absolute; left: var(--lug-x); top: var(--lug-y); width: 0; height: 0; }
 .kc-swing {
-  position: absolute; left: calc(var(--lug-x) - var(--kc-w) * 0.58); top: calc(var(--lug-y) - var(--kc-w) * 0.037); width: var(--kc-w);
-  transform-origin: 58% 3%; transform: rotate(var(--kc-rest)); pointer-events: auto; cursor: grab; touch-action: none; will-change: transform;
+  position: absolute; left: calc(var(--lug-x) - var(--kc-w) * var(--kc-px)); top: calc(var(--lug-y) - var(--kc-w) * var(--kc-ar) * var(--kc-py)); width: var(--kc-w);
+  transform-origin: calc(var(--kc-px) * 100%) calc(var(--kc-py) * 100%); transform: rotate(var(--kc-rest)); pointer-events: auto; cursor: grab; touch-action: none; will-change: transform;
 }
 .kc-swing:active { cursor: grabbing; }
 .kc-swing img { width: 100%; height: auto; user-select: none; -webkit-user-drag: none; }
 @media (max-width: 899px) {
-  .toy { --kc-w: 28cqw; --lug-x: 94cqw; --lug-y: 133cqw; --kc-rest: -6deg; }
+  .toy { --kc-w: 26cqw; --lug-x: 94cqw; --lug-y: 133cqw; }
   .hh-lug {
     left: calc(var(--lug-x) - 2.6cqw); top: calc(var(--lug-y) - 2.6cqw); width: 5.2cqw; height: 5.2cqw; border: 0; border-radius: 50%;
     background: radial-gradient(circle, #5a5a57 0 45%, #b9b9b5 52%, #e4e4e0 70%); box-shadow: inset 0 0.4cqw 0.6cqw rgb(0 0 0 / 0.3);
   }
-  .toy-col { margin-bottom: 84px !important; }
+  .toy-col { margin-bottom: 100px !important; }
 }
 
 /* Analógicos */

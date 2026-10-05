@@ -463,7 +463,7 @@
         // Segurando: o chaveiro segue o dedo, com um pouco de mola.
         v += ((drag.target - a) * 260 - v * 18) * dt;
       } else {
-        v += (-46 * Math.sin(a - r) - 1.5 * v) * dt;
+        v += (-46 * Math.sin(a - r) - 2 * v) * dt;
       }
       a += v * dt;
       set();
