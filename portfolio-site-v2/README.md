@@ -37,6 +37,14 @@ Todo o conteúdo fica em **`assets/js/data.js`**:
 
 As fotos das polaroids estão em `profile.prints`. Hoje são o avatar do GitHub e um print do app do Cairo. Para usar fotos suas, coloque os arquivos em `assets/img/` e troque o `src`.
 
+## Publicar
+
+O site está em https://phbg.com.br, hospedado na Netlify. O domínio foi comprado no Registro.br e aponta para a Netlify por dois registros: `A` para `75.2.60.5` e `CNAME www` para o subdomínio `.netlify.app` do projeto.
+
+Com a Netlify ligada a este repositório (branch `main`, com **Base directory** e **Publish directory** em `portfolio-site-v2` e o **Build command** vazio), cada commit publica o site sozinho.
+
+A imagem de prévia do link (LinkedIn, WhatsApp) é o `og.png`, com 1200x630.
+
 ## Rodar no computador
 
 ```bash
