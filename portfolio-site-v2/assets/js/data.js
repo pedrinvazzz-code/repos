@@ -17,6 +17,9 @@ window.SITE = {
   ],
 
   // Pôster da página inicial: "<saudação> dados com [brinquedo] sentido."
+  // Arte pontilhada do fundo da página inicial, revelada pelo mouse (ou pelo dedo, no celular).
+  heroArt: "assets/img/hero-art.webp",
+
   poster: {
     left: "dados com",
     right: "sentido.",
@@ -50,7 +53,7 @@ window.SITE = {
       id: "cairo-special-bikes",
       company: "Cairo Special Bikes",
       status: "Entregue",
-      title: "Da planilha ao painel",
+      title: "Sistema de dados ponta a ponta",
       file: "cairo-special-bikes.md",
       category: "profissional",
       tools: ["python", "supabase", "powerbi"],
@@ -80,7 +83,7 @@ window.SITE = {
       id: "nettrac-nfse-etl",
       company: "NetTRAC Rastreadores",
       status: "Entregue",
-      title: "Notas fiscais que viram análise",
+      title: "Pipeline ETL de notas fiscais",
       file: "nettrac-nfse-etl.md",
       category: "profissional",
       tools: ["python", "postgresql", "powerbi"],
@@ -101,7 +104,7 @@ window.SITE = {
     {
       id: "voebem-analytics",
       company: "Dados abertos da ANAC",
-      title: "Um milhão de voos",
+      title: "Lakehouse de voos no Databricks",
       file: "voebem-analytics.md",
       category: "pessoal",
       tools: ["databricks", "pyspark", "sql"],
@@ -124,7 +127,7 @@ window.SITE = {
     {
       id: "dominando-pandas",
       company: "Estudo autodirigido",
-      title: "Uma análise por dia",
+      title: "Prática diária com pandas",
       file: "dominando-pandas.md",
       category: "pessoal",
       tools: ["python", "pandas", "matplotlib"],

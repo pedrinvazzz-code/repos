@@ -116,7 +116,18 @@ p { text-wrap: pretty; }
 @keyframes panel-in { from { opacity: 0; transform: translateY(10px); } }
 
 /* ---------- Pôster (início) ---------- */
-#panel-inicio { padding-bottom: 0; }
+#panel-inicio { position: relative; padding-bottom: 0; overflow: hidden; }
+
+/* Arte pontilhada do fundo: só aparece num círculo em volta do mouse (ou do dedo). */
+.hero-art {
+  position: absolute; inset: 0; z-index: 0; pointer-events: none;
+  background-repeat: no-repeat; background-size: auto 118%; background-position: 86% 34%;
+  image-rendering: pixelated; opacity: 0.62;
+  -webkit-mask-image: radial-gradient(circle var(--r, 0px) at var(--x, 50%) var(--y, 50%), #000 0%, rgb(0 0 0 / 0.85) 45%, transparent 100%);
+  mask-image: radial-gradient(circle var(--r, 0px) at var(--x, 50%) var(--y, 50%), #000 0%, rgb(0 0 0 / 0.85) 45%, transparent 100%);
+}
+@media (max-width: 899px) { .hero-art { background-size: auto 600px; background-position: 50% -70px; } }
+.poster { position: relative; z-index: 1; }
 .poster {
   min-height: calc(100svh - 92px); padding-bottom: 120px;
   display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; column-gap: clamp(20px, 2.6vw, 44px);

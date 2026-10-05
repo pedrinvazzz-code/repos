@@ -13,6 +13,7 @@ O site é HTML, CSS e JavaScript puros, sem etapa de build. Funciona direto no G
   - **Snake do pipeline:** a cobrinha come linhas de dados (direcionais ou deslizar).
 
   Segurar uma direção repete o movimento. Direcionais ou toque escolhem o jogo, **A** ou **START** começam, **B**, **SELECT** ou **MENU** voltam ao menu. Com o foco no console, o teclado também funciona. Os recordes ficam salvos no navegador de quem joga.
+- **Arte do fundo:** uma estátua em pontilhado 1-bit fica escondida atrás do pôster. No computador, ela aparece num círculo em volta do mouse. No celular, o círculo passeia devagar pela faixa acima do console e o dedo também revela a arte. A imagem fica em `assets/img/hero-art.webp` (`heroArt` no `data.js`).
 - **Dock de vidro:** troca entre projetos, lab e perfil. Os endereços `#projetos`, `#lab` e `#perfil` funcionam como links diretos.
 - **Projetos:** abas **Profissional** (projetos entregues para empresas, com a logo na capa) e **Pessoal** (estudos, com a ferramenta principal na capa). Cada cartão mostra as ferramentas usadas como chips, definidos em `tools` no `data.js`. Os cartões saem da pasta da dock e cada um abre uma janela com o estudo de caso (`#projetos/<id>`). A aba de cada projeto vem do campo `category` em `data.js`.
 - **Lab:** janelinhas com trechos reais de código dos repositórios menores, uma nota e um quadro de adesivos arrastáveis com as ferramentas da stack. Os adesivos ficam salvos no navegador de quem visita.

@@ -441,6 +441,76 @@
     showMenu();
   }
 
+  /* ---------- Arte do fundo, revelada pelo mouse ou pelo dedo ---------- */
+  function initHeroArt() {
+    const art = $("[data-hero-art]");
+    const panel = $("#panel-inicio");
+    if (!art || !D.heroArt) return;
+    art.style.backgroundImage = `url("${D.heroArt}")`;
+    const finePointer = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
+    const radius = () => Math.round(Math.min(230, Math.max(130, window.innerWidth * 0.15)));
+    let x = 0, y = 0, r = 0, tx = 0, ty = 0, tr = 0;
+    let raf = 0;
+    let touching = false;
+    let visible = true;
+    const drifting = () => !finePointer && !touching && !reduceMotion && visible && toy.active;
+
+    function paint() {
+      art.style.setProperty("--x", `${x.toFixed(1)}px`);
+      art.style.setProperty("--y", `${y.toFixed(1)}px`);
+      art.style.setProperty("--r", `${Math.max(0, r).toFixed(1)}px`);
+    }
+    function frame(t) {
+      raf = 0;
+      if (drifting()) {
+        // No celular, sem toque, o círculo passeia devagar pela arte.
+        // Fica na faixa acima do console, onde o fundo aparece.
+        const w = panel.clientWidth;
+        const top = 24;
+        const bottom = Math.max(180, $(".toy-col").getBoundingClientRect().top - panel.getBoundingClientRect().top - 8);
+        const k = t / 1000;
+        tx = w * (0.5 + 0.38 * Math.sin(k * 0.33));
+        ty = top + (bottom - top) * (0.5 + 0.36 * Math.sin(k * 0.21 + 1.3));
+        tr = Math.min(radius(), (bottom - top) * 0.75);
+      }
+      x += (tx - x) * 0.14;
+      y += (ty - y) * 0.14;
+      r += (tr - r) * 0.12;
+      paint();
+      const settling = Math.abs(tx - x) > 0.4 || Math.abs(ty - y) > 0.4 || Math.abs(tr - r) > 0.4;
+      if (settling || drifting()) raf = requestAnimationFrame(frame);
+    }
+    const kick = () => { if (!raf) raf = requestAnimationFrame(frame); };
+    const aim = (clientX, clientY) => {
+      const rect = panel.getBoundingClientRect();
+      tx = clientX - rect.left;
+      ty = clientY - rect.top;
+      if (r < 2) { x = tx; y = ty; }
+      tr = radius();
+    };
+
+    if (finePointer) {
+      panel.addEventListener("pointermove", (e) => { if (e.pointerType === "mouse") { aim(e.clientX, e.clientY); kick(); } });
+      panel.addEventListener("pointerleave", () => { tr = 0; kick(); });
+    } else {
+      // Toque: o dedo vira a lanterna enquanto encosta na tela.
+      const touch = (e) => { const p = e.touches[0]; if (!p) return; touching = true; aim(p.clientX, p.clientY); kick(); };
+      panel.addEventListener("touchstart", touch, { passive: true });
+      panel.addEventListener("touchmove", touch, { passive: true });
+      const release = () => { touching = false; kick(); };
+      panel.addEventListener("touchend", release, { passive: true });
+      panel.addEventListener("touchcancel", release, { passive: true });
+      if (reduceMotion) {
+        // Sem animação: deixa um pedaço da arte visível, parado.
+        x = tx = panel.clientWidth * 0.5; y = ty = 150; r = tr = radius();
+        paint();
+      }
+    }
+    new IntersectionObserver(([e]) => { visible = e.isIntersecting; kick(); }).observe(panel);
+    toy.onActive = kick;
+    kick();
+  }
+
   /* ---------- Projetos ---------- */
   function formatStat(s, v) {
     if (s.format === "dec") return v.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -643,6 +713,7 @@
     document.body.dataset.view = name;
     toy.active = name === "inicio";
     if (toy.active && toy.start) toy.start();
+    if (toy.active && toy.onActive) toy.onActive();
     window.scrollTo(0, 0);
     const titles = { inicio: "Engenharia de Dados", projetos: "Projetos", lab: "Laboratório", perfil: "Perfil" };
     document.title = `${D.name} | ${titles[name]}`;
@@ -886,6 +957,7 @@
     renderProfile();
     initBoard();
     initToy();
+    initHeroArt();
     initNav();
     route();
   }
