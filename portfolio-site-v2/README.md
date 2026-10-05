@@ -12,9 +12,9 @@ O site é HTML, CSS e JavaScript puros, sem etapa de build. Funciona direto no G
   - **Deploy em produção:** o pato pula os bugs, cada vez mais rápido (A ou toque).
   - **Snake do pipeline:** a cobrinha come linhas de dados (direcionais ou deslizar).
 
-  Direcionais ou toque escolhem o jogo, **A** começa, **B** ou o botão de início voltam ao menu. Com o foco no console, o teclado também funciona. Os recordes ficam salvos no navegador de quem joga.
+  Em telas de toque aparece um controle grande embaixo do console (direcionais, A e B); segurar uma direção repete o movimento. Direcionais ou toque escolhem o jogo, **A** começa, **B** ou o botão de início voltam ao menu. Com o foco no console, o teclado também funciona. Os recordes ficam salvos no navegador de quem joga.
 - **Dock de vidro:** troca entre projetos, lab e perfil. Os endereços `#projetos`, `#lab` e `#perfil` funcionam como links diretos.
-- **Projetos:** cartões que saem da pasta da dock. Cada um abre uma janela com o estudo de caso (`#projetos/<id>`).
+- **Projetos:** abas **Profissional** (projetos para empresas, com a logo na capa) e **Pessoal** (estudos, com os números principais na capa). Os cartões saem da pasta da dock e cada um abre uma janela com o estudo de caso (`#projetos/<id>`). A aba de cada projeto vem do campo `category` em `data.js`.
 - **Lab:** janelinhas com trechos reais de código dos repositórios menores, uma nota e um quadro de adesivos arrastáveis com as ferramentas da stack. Os adesivos ficam salvos no navegador de quem visita.
 - **Perfil:** polaroids (clique para trocar a da frente), texto do README do GitHub, arquivos `.txt` e links.
 

@@ -340,7 +340,25 @@
       game.input(b);
     }
 
-    $$("[data-btn]").forEach((el) => el.addEventListener("click", () => press(el.dataset.btn)));
+    // Botões do console e do controle de toque. Segurar uma direção repete o comando.
+    const REPEAT = new Set(["left", "right", "up", "down"]);
+    $$("[data-btn]").forEach((el) => {
+      const btn = el.dataset.btn;
+      let wait = 0;
+      let loop = 0;
+      const stop = () => { clearTimeout(wait); clearInterval(loop); el.classList.remove("held"); };
+      el.addEventListener("pointerdown", (e) => {
+        if (e.button > 0) return;
+        e.preventDefault();
+        el.classList.add("held");
+        press(btn);
+        if (REPEAT.has(btn)) wait = setTimeout(() => { loop = setInterval(() => press(btn), 75); }, 260);
+      });
+      ["pointerup", "pointerleave", "pointercancel"].forEach((type) => el.addEventListener(type, stop));
+      // Teclado (Enter/Espaço) gera clique sem ponteiro.
+      el.addEventListener("click", (e) => { if (e.detail === 0) press(btn); });
+      el.addEventListener("contextmenu", (e) => e.preventDefault());
+    });
     tilesEl.addEventListener("click", (e) => {
       const t = e.target.closest("[data-tile]");
       if (t) open(Number(t.dataset.tile));
@@ -420,14 +438,27 @@
 
   /* ---------- Projetos ---------- */
   function formatStat(s, v) {
+    if (s.format === "dec") return v.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     const n = Math.round(v).toLocaleString("pt-BR");
     return s.format === "usd" ? `US$ ${n}` : s.format === "pct" ? `${n}%` : n;
   }
-  function renderWorks() {
-    $("[data-works]").innerHTML = D.projects.map((p, i) => {
-      const preview = p.cover
-        ? `<img src="${p.cover.src}" alt="" loading="lazy" decoding="async" style="object-position:${p.cover.position || "50% 50%"}">`
-        : `<div class="work-stats">${p.stats.map((s) => `<div class="stat"><span class="stat-value" data-stat="${s.value}" data-format="${s.format}">${formatStat(s, s.value)}</span><span class="stat-label">${esc(s.label)}</span></div>`).join("")}</div>`;
+  let workTab = D.projectTabs[0].id;
+  function renderWorks(animate = false) {
+    $("[data-work-tabs]").innerHTML = D.projectTabs.map((tab) => {
+      const n = D.projects.filter((p) => p.category === tab.id).length;
+      return `<button class="works-tab" type="button" role="tab" id="tab-${tab.id}" data-work-tab="${tab.id}" aria-selected="${tab.id === workTab}" tabindex="${tab.id === workTab ? 0 : -1}">${esc(tab.label)}<span class="works-count">${n}</span></button>`;
+    }).join("");
+    const grid = $("[data-works]");
+    grid.setAttribute("aria-labelledby", `tab-${workTab}`);
+    grid.innerHTML = D.projects.filter((p) => p.category === workTab).map((p, i) => {
+      let preview;
+      if (p.cover && p.cover.logo) {
+        preview = `<div class="work-logo" style="background:${p.cover.bg};--pad:${p.cover.pad || 0};--fit:${p.cover.fit || "contain"}"><img src="${p.cover.logo}" alt="${esc(p.cover.alt)}" loading="lazy" decoding="async"></div>`;
+      } else if (p.stats) {
+        preview = `<div class="work-stats" style="--tint:${p.tint || "#eef6f1"}">${p.stats.map((s) => `<div class="stat"><span class="stat-value" data-stat="${s.value}" data-format="${s.format}">${formatStat(s, s.value)}</span><span class="stat-label">${esc(s.label)}</span></div>`).join("")}</div>`;
+      } else {
+        preview = `<img src="${p.cover.src}" alt="" loading="lazy" decoding="async" style="object-position:${p.cover.position || "50% 50%"}">`;
+      }
       return `
         <a class="work-card" href="#projetos/${p.id}" data-case-open="${p.id}" style="--i:${i}">
           <div class="work-preview">${preview}</div>
@@ -440,6 +471,32 @@
           </div>
         </a>`;
     }).join("");
+    if (animate && !reduceMotion) {
+      grid.classList.remove("swap");
+      void grid.offsetWidth;
+      grid.classList.add("swap");
+    }
+  }
+
+  function initWorkTabs() {
+    const tabs = $("[data-work-tabs]");
+    const select = (id, focus) => {
+      if (id === workTab) return;
+      workTab = id;
+      renderWorks(true);
+      countStats();
+      if (focus) $(`[data-work-tab="${id}"]`).focus();
+    };
+    tabs.addEventListener("click", (e) => {
+      const t = e.target.closest("[data-work-tab]");
+      if (t) select(t.dataset.workTab, false);
+    });
+    tabs.addEventListener("keydown", (e) => {
+      if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
+      const ids = D.projectTabs.map((t) => t.id);
+      const i = ids.indexOf(workTab);
+      select(ids[(i + (e.key === "ArrowRight" ? 1 : -1) + ids.length) % ids.length], true);
+    });
   }
 
   function countStats() {
@@ -493,6 +550,7 @@
   function openCase(id) {
     const p = D.projects.find((x) => x.id === id);
     if (!p || (caseId === id && !caseEl.hidden)) return;
+    if (p.category && p.category !== workTab) { workTab = p.category; renderWorks(); }
     caseId = id;
     const [first, ...rest] = p.media;
     caseWin.innerHTML = `
@@ -805,6 +863,7 @@
   function init() {
     initText();
     renderWorks();
+    initWorkTabs();
     renderLab();
     renderProfile();
     initBoard();

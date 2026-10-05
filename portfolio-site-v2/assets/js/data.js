@@ -24,6 +24,12 @@ window.SITE = {
     subRight: { text: "agora: gestão da informação", handle: "@ufu", url: "https://ufu.br" }
   },
 
+  // Abas da página de projetos. "category" de cada projeto diz em qual aba ele aparece.
+  projectTabs: [
+    { id: "profissional", label: "Profissional" },
+    { id: "pessoal", label: "Pessoal" }
+  ],
+
   projects: [
     {
       id: "cairo-special-bikes",
@@ -31,7 +37,8 @@ window.SITE = {
       badge: { text: "Em produção", live: true },
       title: "Da planilha ao painel",
       file: "cairo-special-bikes.md",
-      cover: { src: "assets/img/cairo-dashboard.webp", position: "50% 0%" },
+      category: "profissional",
+      cover: { logo: "assets/img/logo-cairo.webp", alt: "Logo da Cairo Special Bikes", bg: "radial-gradient(70% 95% at 50% 118%, #623c2e 0%, #141416 64%)", pad: "0", fit: "cover" },
       tagline: "Plataforma de dados para uma loja de bicicletas consignadas, do app de campo ao dashboard.",
       stack: ["Python", "pandas", "PostgreSQL", "Supabase", "GitHub Actions", "Apps Script", "Power BI"],
       url: "https://github.com/pedrinvazzz-code/Cairo-Special-Bikes",
@@ -59,7 +66,8 @@ window.SITE = {
       badge: { text: "Em uso", live: true },
       title: "Notas fiscais que viram análise",
       file: "nettrac-nfse-etl.md",
-      cover: { src: "assets/img/nettrac-dashboard.webp", position: "50% 0%" },
+      category: "profissional",
+      cover: { logo: "assets/img/logo-nettrac.webp", alt: "Logo da NetTRAC Rastreadores", bg: "#ffffff", pad: "0 2%", fit: "contain" },
       tagline: "Pipeline que transforma notas fiscais de serviço em análise financeira para uma empresa de rastreamento veicular.",
       stack: ["Python", "lxml", "PyMuPDF", "watchdog", "PostgreSQL", "Supabase", "Power BI"],
       url: "https://github.com/pedrinvazzz-code/NetTRAC-NFSe-ETL",
@@ -79,7 +87,14 @@ window.SITE = {
       badge: { text: "Databricks" },
       title: "Um milhão de voos",
       file: "voebem-analytics.md",
-      cover: { src: "assets/img/voebem-genie.webp", position: "50% 20%" },
+      category: "pessoal",
+      // Sem logo de empresa: o cartão mostra os números do projeto.
+      tint: "#eef3fa",
+      stats: [
+        { value: 1.01, label: "milhão de voos", format: "dec" },
+        { value: 12, label: "regras de qualidade", format: "int" },
+        { value: 41, label: "duplicatas removidas", format: "int" }
+      ],
       tagline: "Mais de 1 milhão de voos da ANAC em arquitetura medalhão, com um agente que responde em português.",
       stack: ["Databricks", "PySpark", "SQL", "Delta Lake", "Unity Catalog", "Genie"],
       url: "https://github.com/pedrinvazzz-code/-voebem-analytics-anac",
@@ -100,7 +115,9 @@ window.SITE = {
       badge: { text: "Power BI" },
       title: "Quem compra, e por quê",
       file: "segmentacao-clientes.md",
-      // Sem print: o cartão mostra os números reais do estudo.
+      category: "pessoal",
+      // Sem logo de empresa: o cartão mostra os números do estudo.
+      tint: "#eef6f1",
       stats: [
         { value: 2000, label: "clientes", format: "int" },
         { value: 602, label: "gasto médio", format: "usd" },
