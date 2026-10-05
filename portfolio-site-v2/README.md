@@ -13,6 +13,7 @@ O site é HTML, CSS e JavaScript puros, sem etapa de build. Funciona direto no G
   - **Snake do pipeline:** a cobrinha come linhas de dados (direcionais ou deslizar).
 
   Segurar uma direção repete o movimento. Direcionais ou toque escolhem o jogo, **A** ou **START** começam, **B**, **SELECT** ou **MENU** voltam ao menu. Com o foco no console, o teclado também funciona. Os recordes ficam salvos no navegador de quem joga.
+  Um **chaveiro** fica preso na alça do console (`assets/img/keychain.webp`): balança quando o mouse passa, dá para puxar e soltar, e chacoalha quando você aperta os botões.
   Embaixo, a **stack** em teclas com os logos (`homeStack` no `data.js`).
 - **Artes do fundo:** cada aba tem artes escondidas (estátua, coruja em meio-tom, pássaro em ASCII, flor pixelada e a mão com os alertas). No computador, elas aparecem num círculo em volta do mouse. No celular, o círculo passeia sozinho de arte em arte e o dedo também revela. As imagens ficam em `assets/img/` (`hero-art.webp` e `art-*.webp`) e a posição de cada uma por aba fica no `style.css`, na seção "Artes do fundo".
 - **Dock de vidro:** troca entre projetos, lab e perfil. Os endereços `#projetos`, `#lab` e `#perfil` funcionam como links diretos.
