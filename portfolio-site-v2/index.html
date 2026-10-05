@@ -54,7 +54,12 @@
   <main class="main" id="painel">
     <!-- Início -->
     <section class="panel" id="panel-inicio" data-panel="inicio" aria-label="Início">
-      <div class="hero-art" data-hero-art aria-hidden="true"></div>
+      <div class="arts" data-arts aria-hidden="true">
+        <img class="art art--statue" src="assets/img/hero-art.webp" alt="" width="200" height="356" decoding="async">
+        <img class="art art--owl" src="assets/img/art-owl.webp" alt="" width="604" height="909" decoding="async">
+        <img class="art art--bird" src="assets/img/art-bird.webp" alt="" width="608" height="525" decoding="async">
+        <img class="art art--flower" src="assets/img/art-flower.webp" alt="" width="384" height="662" decoding="async">
+      </div>
       <div class="poster">
         <div class="poster-side poster-left">
           <p class="poster-hello" data-greeting>olá,</p>
@@ -125,11 +130,20 @@
           <p class="poster-sub" data-poster-sub-right></p>
         </div>
         <p class="poster-sub poster-sub--merged" data-poster-sub-merged></p>
+
+        <div class="stack">
+          <p class="stack-title" id="stack-title">minha stack</p>
+          <ul class="stack-keys" aria-labelledby="stack-title" data-stack></ul>
+        </div>
       </div>
     </section>
 
     <!-- Projetos -->
     <section class="panel" id="panel-projetos" data-panel="projetos" aria-labelledby="projetos-title" hidden>
+      <div class="arts" data-arts aria-hidden="true">
+        <img class="art art--hand" src="assets/img/art-hand.webp" alt="" width="820" height="918" decoding="async">
+        <img class="art art--bird" src="assets/img/art-bird.webp" alt="" width="608" height="525" decoding="async">
+      </div>
       <h1 class="sr-only" id="projetos-title">Projetos</h1>
       <div class="works-tabs" role="tablist" aria-label="Tipo de projeto" data-work-tabs></div>
       <div class="works-grid" role="tabpanel" data-works></div>
@@ -137,20 +151,25 @@
 
     <!-- Laboratório -->
     <section class="panel" id="panel-lab" data-panel="lab" aria-labelledby="lab-title" hidden>
-      <div class="lab">
+      <div class="arts" data-arts aria-hidden="true">
+        <img class="art art--owl" src="assets/img/art-owl.webp" alt="" width="604" height="909" decoding="async">
+        <img class="art art--flower" src="assets/img/art-flower.webp" alt="" width="384" height="662" decoding="async">
+        <img class="art art--hand" src="assets/img/art-hand.webp" alt="" width="820" height="918" decoding="async">
+      </div>
+      <div class="lab" data-lab data-anchor="lab">
         <h1 class="lab-title pixel-title" id="lab-title"><span data-lab-title></span><span class="lab-dots" aria-hidden="true"><i>.</i><i>.</i><i>.</i></span></h1>
         <p class="lab-sub" data-lab-sub></p>
-        <div class="lab-grid" data-lab-grid></div>
+        <div class="lab-projects" data-lab-projects></div>
 
         <section class="board" aria-labelledby="board-title">
           <h2 class="board-title" id="board-title" data-board-title></h2>
-          <div class="board-desk" data-board>
+          <div class="board-desk" data-board data-anchor="desk">
             <div class="board-sheet">
               <div class="board-sheet-head"><span>adesivos.png</span><button class="board-reset" type="button" data-board-reset>limpar</button></div>
               <div class="board-stickers" data-stickers></div>
-              <p class="board-hint">Arraste um adesivo para o papel, ou toque nele.</p>
+              <p class="board-hint">Puxe um adesivo para descolar e cole onde quiser nesta página. Ou só toque nele.</p>
             </div>
-            <div class="board-paper" data-paper>
+            <div class="board-paper" data-paper data-anchor="paper">
               <span class="tape" aria-hidden="true"></span>
               <p class="paper-head">para fazer:</p>
               <ul class="paper-todo" data-todo></ul>
@@ -162,6 +181,11 @@
 
     <!-- Perfil -->
     <section class="panel" id="panel-perfil" data-panel="perfil" aria-labelledby="perfil-title" hidden>
+      <div class="arts" data-arts aria-hidden="true">
+        <img class="art art--statue" src="assets/img/hero-art.webp" alt="" width="200" height="356" decoding="async">
+        <img class="art art--flower" src="assets/img/art-flower.webp" alt="" width="384" height="662" decoding="async">
+        <img class="art art--bird" src="assets/img/art-bird.webp" alt="" width="608" height="525" decoding="async">
+      </div>
       <div class="profile">
         <div class="prints" data-prints></div>
         <div class="profile-col">
@@ -194,7 +218,7 @@
     </div>
   </nav>
 
-  <p class="colophon" aria-hidden="true">feito com claude<br>atualizado em <span data-updated>10/26</span></p>
+  <p class="colophon" aria-hidden="true">atualizado em <span data-updated>10/26</span></p>
 
   <div class="case" data-case role="dialog" aria-modal="true" aria-labelledby="case-title" hidden>
     <div class="case-backdrop" data-close-case></div>

@@ -10,19 +10,16 @@ window.SITE = {
   updated: "10/26",
 
   links: [
-    { label: "LinkedIn", url: "https://www.linkedin.com/in/pedro-henrique-ferreira-borges-vaz", icon: "linkedin-logo", hint: "pedro-henrique-ferreira-borges-vaz" },
+    { label: "LinkedIn", url: "https://www.linkedin.com/in/pedro-henrique-borges-b24556b9", icon: "linkedin-logo", hint: "pedro-henrique-borges-b24556b9" },
     { label: "GitHub", url: "https://github.com/pedrinvazzz-code", icon: "github-logo", hint: "pedrinvazzz-code" },
     { label: "Instagram", url: "https://www.instagram.com/ph_bggg", icon: "instagram-logo", hint: "@ph_bggg" },
     { label: "E-mail", url: "mailto:phenrriquevaz@gmail.com", icon: "envelope-simple", hint: "phenrriquevaz@gmail.com" }
   ],
 
-  // Pôster da página inicial: "<saudação> dados com [brinquedo] sentido."
-  // Arte pontilhada do fundo da página inicial, revelada pelo mouse (ou pelo dedo, no celular).
-  heroArt: "assets/img/hero-art.webp",
-
+  // Pôster da página inicial: "<saudação> Dados viram [console] Sistemas"
   poster: {
-    left: "dados com",
-    right: "sentido.",
+    left: "Dados viram",
+    right: "Sistemas",
     subLeft: "engenharia de dados",
     subRight: { text: "agora: gestão da informação", handle: "@ufu", url: "https://ufu.br" }
   },
@@ -44,9 +41,16 @@ window.SITE = {
     databricks: { label: "Databricks", icon: "databricks", color: "#FF3621" },
     pyspark: { label: "PySpark", icon: "apachespark", color: "#E25A1C" },
     sql: { label: "SQL", icon: "database-fill", color: "#5B6B7F" },
-    powerbi: { label: "Power BI", icon: "chart-bar-fill", color: "#D9A300" },
-    githubactions: { label: "GitHub Actions", icon: "githubactions", color: "#2088FF" }
+    powerbi: { label: "Power BI", icon: "powerbi", color: "#E0A800" },
+    githubactions: { label: "GitHub Actions", icon: "githubactions", color: "#2088FF" },
+    git: { label: "Git", icon: "git", color: "#F05032" }
   },
+
+  // Stack da página inicial, em teclas. Use as chaves de "tools" acima.
+  homeStack: ["python", "pandas", "sql", "postgresql", "supabase", "databricks", "pyspark", "powerbi", "githubactions", "git"],
+
+  // Aviso que aparece junto de toda imagem de projeto.
+  mediaNote: "dados fictícios",
 
   projects: [
     {
@@ -62,7 +66,7 @@ window.SITE = {
       stack: ["Python", "pandas", "PostgreSQL", "Supabase", "GitHub Actions", "Apps Script", "Power BI"],
       url: "https://github.com/pedrinvazzz-code/Cairo-Special-Bikes",
       media: [
-        { type: "image", src: "assets/img/cairo-dashboard.webp", width: 1400, height: 791, alt: "Painel Visão Geral no Power BI com consignações, vendas, giro mediano e meta de faturamento.", caption: "Base de demonstração: nomes fictícios e valores alterados." },
+        { type: "image", src: "assets/img/cairo-dashboard.webp", width: 1400, height: 791, alt: "Painel Visão Geral no Power BI com consignações, vendas, giro mediano e meta de faturamento.", caption: "Painel com a base de demonstração." },
         {
           type: "phones", caption: "App de campo rodando sobre uma base simulada.",
           items: [
@@ -92,7 +96,7 @@ window.SITE = {
       stack: ["Python", "lxml", "PyMuPDF", "watchdog", "PostgreSQL", "Supabase", "Power BI"],
       url: "https://github.com/pedrinvazzz-code/NetTRAC-NFSe-ETL",
       media: [
-        { type: "image", src: "assets/img/nettrac-dashboard.webp", width: 1024, height: 572, alt: "Wireframe do painel da NetTRAC no Power BI com faturamento, notas pendentes e distribuição por serviço.", caption: "Wireframe do painel, sem dados da empresa." }
+        { type: "image", src: "assets/img/nettrac-dashboard.webp", width: 1024, height: 572, alt: "Wireframe do painel da NetTRAC no Power BI com faturamento, notas pendentes e distribuição por serviço.", caption: "Wireframe do painel." }
       ],
       sections: [
         { heading: "O problema", body: "O Portal Nacional da NFS-e só deixa consultar uma nota por vez. Sem exportação em lote, analisar receita por cliente, período ou tipo de serviço era impossível." },
@@ -148,21 +152,18 @@ window.SITE = {
     }
   ],
 
+  // Laboratório: um bloco por projeto, com o código (ou imagem) e uma anotação ao lado.
   lab: {
     title: "Construindo para aprender",
-    sub: "Exercícios, estudos e projetos menores. Cada janela abre o repositório no GitHub.",
-    note: {
-      title: "Como cheguei aqui",
-      paragraphs: [
-        "Venho aprendendo a construir soluções de dados na <em>prática</em>, desde planilhas e APIs até bancos de dados na nuvem, pipelines de ETL e dashboards em Power BI.",
-        "Os exercícios vêm de cursos da IBM, de disciplinas da UFU e de estudos por conta própria, como os dias de prática do Dominando Pandas."
-      ]
-    },
-    tiles: [
+    sub: "Exercícios, estudos e projetos menores, separados por projeto. Cada janela abre o repositório no GitHub.",
+    projects: [
       {
-        name: "etl_sqlite3.py", span: 2, lang: "py",
+        id: "pandas", name: "Dominando Pandas", origin: "estudo próprio",
         url: "https://github.com/pedrinvazzz-code/Dominando-Pandas",
-        code: String.raw`def extract(file_path: str) -> pd.DataFrame:
+        files: [
+          {
+            name: "etl_sqlite3.py", lang: "py",
+            code: String.raw`def extract(file_path: str) -> pd.DataFrame:
   logging.info(f"Extracting data from {file_path}")
   try:
       df = pd.read_csv(file_path)
@@ -176,12 +177,25 @@ def transform(df: pd.DataFrame) -> pd.DataFrame:
     logging.info(f"Transforming data from {df}")
     try:
         treated_df = df.dropna().drop_duplicates()`
+          },
+          { name: "roas_por_canal.png", image: { src: "assets/img/roas.webp", width: 1000, height: 600, alt: "Gráfico de barras do ROAS por canal de marketing, com Email Marketing muito à frente." } }
+        ],
+        note: {
+          text: "Uma análise por dia, cada uma com um dataset e perguntas de negócio. No fim, um ETL completo.",
+          points: [
+            "extract e transform registram cada etapa no log, e o erro para o processo em vez de passar em silêncio.",
+            "dropna e drop_duplicates fazem a limpeza básica antes da carga.",
+            "O gráfico é do dia 8: ROAS por canal a partir de 1.200 campanhas."
+          ]
+        }
       },
-      { name: "roas_por_canal.png", image: { src: "assets/img/roas.webp", width: 1000, height: 600, alt: "Gráfico de barras do ROAS por canal de marketing, com Email Marketing muito à frente." }, url: "https://github.com/pedrinvazzz-code/Dominando-Pandas" },
       {
-        name: "avl.py", lang: "py",
+        id: "avl", name: "Índice remissivo com árvore AVL", origin: "disciplina · UFU",
         url: "https://github.com/pedrinvazzz-code/indice-remissivo-avl-python",
-        code: String.raw`def __RotacaoLL(self, A):
+        files: [
+          {
+            name: "avl.py", lang: "py",
+            code: String.raw`def __RotacaoLL(self, A):
     self.rotacoes += 1
     B = A.esq
     A.esq = B.dir
@@ -190,11 +204,24 @@ def transform(df: pd.DataFrame) -> pd.DataFrame:
     A.altura = self.__maior(self.__altura(A.esq), self.__altura(A.dir)) + 1
     B.altura = self.__maior(self.__altura(B.esq), self.__altura(B.dir)) + 1
     return B`
+          }
+        ],
+        note: {
+          text: "Um índice que lista cada palavra de um texto e as linhas em que ela aparece.",
+          points: [
+            "Cada nó guarda a palavra e um set de linhas, então repetir a palavra na mesma linha não duplica nada.",
+            "A rotação LL rebalanceia a árvore depois de uma inserção do lado esquerdo e recalcula as alturas.",
+            "Também tem busca por prefixo e a palavra mais frequente."
+          ]
+        }
       },
       {
-        name: "eleicoes_2024.sql", lang: "sql",
+        id: "eleicoes", name: "Eleições municipais 2024", origin: "disciplina · UFU",
         url: "https://github.com/pedrinvazzz-code/banco-de-dados-eleicoes-2024",
-        code: String.raw`CREATE SCHEMA ELEICAO_2024;
+        files: [
+          {
+            name: "eleicoes_2024.sql", lang: "sql",
+            code: String.raw`CREATE SCHEMA ELEICAO_2024;
 SET SEARCH_PATH TO ELEICAO_2024;
 
 CREATE TABLE CARGO (
@@ -207,11 +234,24 @@ CREATE TABLE PARTIDO (
   SG_PARTIDO TEXT,
   NM_PARTIDO TEXT
 );`
+          }
+        ],
+        note: {
+          text: "Modelo relacional com os candidatos de 2024, a partir de dados públicos do TSE.",
+          points: [
+            "O schema separa candidato, partido, cargo, coligação e bens declarados.",
+            "Em cima dele, consultas com JOIN, GROUP BY, HAVING e subconsultas.",
+            "A base completa passa de 900 mil linhas de INSERT."
+          ]
+        }
       },
       {
-        name: "phishing.sql", lang: "sql",
+        id: "phishing", name: "URLs de phishing em SQL", origin: "estudo próprio",
         url: "https://github.com/pedrinvazzz-code/Phishing-SQL",
-        code: String.raw`SELECT
+        files: [
+          {
+            name: "phishing.sql", lang: "sql",
+            code: String.raw`SELECT
     phishing,
     AVG(url_length) AS avg_url_length,
     AVG(n_dots) AS avg_n_dots,
@@ -221,11 +261,24 @@ CREATE TABLE PARTIDO (
     AVG(n_redirection) AS avg_n_redirection
 FROM phishing_data
 GROUP BY phishing;`
+          }
+        ],
+        note: {
+          text: "Quais características de uma URL indicam fraude? Análise exploratória em SQLite com um dataset do Kaggle.",
+          points: [
+            "Comparar as médias de cada grupo mostra o que separa uma URL legítima de uma de phishing.",
+            "URLs de phishing têm, em média, uns 43 caracteres a mais e mais barras.",
+            "Conclusão: a estrutura da URL ajuda como sinal de risco, mas sozinha não basta."
+          ]
+        }
       },
       {
-        name: "Locadora.cs", lang: "cs",
+        id: "csharp", name: "POO em C#: locadora", origin: "disciplina · UFU",
         url: "https://github.com/pedrinvazzz-code/POO-em-Csharp-",
-        code: String.raw`interface ISeguravel
+        files: [
+          {
+            name: "Locadora.cs", lang: "cs",
+            code: String.raw`interface ISeguravel
 {
     double CalcularDiariaSeguro();
 }
@@ -237,17 +290,40 @@ public Cliente(string nome, string endereco)
     this.nome = nome;
     this.endereco = endereco;
 }`
+          }
+        ],
+        note: {
+          text: "Projeto final da disciplina: uma locadora de veículos em console, escrita à mão, sem IA.",
+          points: [
+            "A interface ISeguravel obriga cada tipo de veículo e cliente a calcular o próprio seguro.",
+            "O contador estático gera o código de cada cliente de forma incremental.",
+            "Junta herança, classes abstratas, polimorfismo e List<T>."
+          ]
+        }
       },
       {
-        name: "etl_country_gdp.py", lang: "py",
+        id: "ibm", name: "PIB dos países: ETL com web scraping", origin: "curso · IBM",
         url: "https://github.com/pedrinvazzz-code/IBM_project",
-        code: String.raw`def transform(df):
+        files: [
+          {
+            name: "etl_country_gdp.py", lang: "py",
+            code: String.raw`def transform(df):
     GDP_list = df["GDP_USD_millions"].tolist()
     GDP_list = [float("".join(x.split(','))) for x in GDP_list]
     GDP_list = [np.round(x/1000,2) for x in GDP_list]
     df["GDP_USD_millions"] = GDP_list
     df=df.rename(columns = {"GDP_USD_millions":"GDP_USD_billions"})
     return df`
+          }
+        ],
+        note: {
+          text: "Do curso Python Project for Data Engineering, da IBM: tabela da Wikipédia até o SQLite.",
+          points: [
+            "A extração lê a tabela de PIB da página com Requests e BeautifulSoup.",
+            "O transform tira as vírgulas e converte milhões em bilhões de dólares.",
+            "A carga vai para CSV e para o SQLite, com uma consulta dos países acima de 100 bilhões."
+          ]
+        }
       }
     ]
   },
@@ -260,16 +336,15 @@ public Cliente(string nome, string endereco)
       { id: "postgresql", label: "PostgreSQL", color: "#4169E1" },
       { id: "supabase", label: "Supabase", color: "#3ECF8E" },
       { id: "databricks", label: "Databricks", color: "#FF3621" },
-      { id: "githubactions", label: "GitHub Actions", color: "#2088FF" },
-      { id: "git", label: "Git", color: "#F05032" },
-      { id: "dotnet", label: "C# e .NET", color: "#512BD4" }
+      { id: "powerbi", label: "Power BI", color: "#F2C811" },
+      { id: "aws", label: "AWS", color: "#FF9900" },
+      { id: "git", label: "Git", color: "#F05032" }
     ],
     todo: [
-      { text: "colocar o Cairo em produção", done: true },
-      { text: "aprender Databricks no VoeBem", done: true },
-      { text: "montar meu portfólio", done: true },
-      { text: "terminar Gestão da Informação na UFU", done: false },
-      { text: "o próximo pipeline", done: false }
+      { text: "Estudar Databricks", done: true },
+      { text: "Estudar PySpark", done: true },
+      { text: "Montar meu portfólio", done: true },
+      { text: "Construir o próximo pipeline", done: false }
     ]
   },
 

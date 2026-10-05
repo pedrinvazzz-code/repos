@@ -41,6 +41,11 @@
     $("[data-poster-sub-right]").innerHTML = `${esc(P.subRight.text)} ${handle}`;
     $("[data-poster-sub-merged]").innerHTML = `${esc(P.subLeft)} · ${esc(P.subRight.text.replace(/^agora: /, ""))} ${handle}`;
 
+    $("[data-stack]").innerHTML = D.homeStack.map((key, i) => {
+      const t = D.tools[key];
+      return t ? `<li class="key" style="--c:${t.color};--i:${i}"><span class="key-cap">${icon(t.icon)}</span><span class="key-label">${esc(t.label)}</span></li>` : "";
+    }).join("");
+
     const folder = ICONS.ui["folder-simple-fill"];
     $("[data-icon-folder]").innerHTML =
       `<svg viewBox="${folder.viewBox}" aria-hidden="true"><defs><linearGradient id="folder-grad" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#a9d6fa"/><stop offset="1" stop-color="#5fa8ec"/></linearGradient></defs><g fill="url(#folder-grad)">${folder.body}</g></svg>`;
@@ -441,74 +446,92 @@
     showMenu();
   }
 
-  /* ---------- Arte do fundo, revelada pelo mouse ou pelo dedo ---------- */
-  function initHeroArt() {
-    const art = $("[data-hero-art]");
-    const panel = $("#panel-inicio");
-    if (!art || !D.heroArt) return;
-    art.style.backgroundImage = `url("${D.heroArt}")`;
+  /* ---------- Artes do fundo, reveladas pelo mouse ou pelo dedo ---------- */
+  // Cada painel tem uma camada de artes escondida; um círculo em volta do mouse (ou do dedo) mostra o que está embaixo.
+  // No celular, sem toque, o círculo passeia sozinho de arte em arte.
+  const onPanel = [];
+  function initArts() {
     const finePointer = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
     const radius = () => Math.round(Math.min(230, Math.max(130, window.innerWidth * 0.15)));
-    let x = 0, y = 0, r = 0, tx = 0, ty = 0, tr = 0;
-    let raf = 0;
-    let touching = false;
-    let visible = true;
-    const drifting = () => !finePointer && !touching && !reduceMotion && visible && toy.active;
 
-    function paint() {
-      art.style.setProperty("--x", `${x.toFixed(1)}px`);
-      art.style.setProperty("--y", `${y.toFixed(1)}px`);
-      art.style.setProperty("--r", `${Math.max(0, r).toFixed(1)}px`);
-    }
-    function frame(t) {
-      raf = 0;
-      if (drifting()) {
-        // No celular, sem toque, o círculo passeia devagar pela arte.
-        // Fica na faixa acima do console, onde o fundo aparece.
-        const w = panel.clientWidth;
-        const top = 24;
-        const bottom = Math.max(180, $(".toy-col").getBoundingClientRect().top - panel.getBoundingClientRect().top - 8);
-        const k = t / 1000;
-        tx = w * (0.5 + 0.38 * Math.sin(k * 0.33));
-        ty = top + (bottom - top) * (0.5 + 0.36 * Math.sin(k * 0.21 + 1.3));
-        tr = Math.min(radius(), (bottom - top) * 0.75);
+    $$("[data-arts]").forEach((layer) => {
+      const panel = layer.closest(".panel");
+      const name = panel.dataset.panel;
+      let x = 0, y = 0, r = 0, tx = 0, ty = 0, tr = 0;
+      let raf = 0, wait = 0, touching = false, stop = -1, nextAt = 0, last = null;
+      const touring = () => !finePointer && !reduceMotion && !touching && current === name;
+
+      // Pontos focais das artes visíveis agora (--fx e --fy no CSS dizem onde fica o "rosto" de cada uma).
+      function spots() {
+        const box = panel.getBoundingClientRect();
+        return $$(".art", layer).map((a) => {
+          const b = a.getBoundingClientRect();
+          if (!b.width) return null;
+          const cs = getComputedStyle(a);
+          const fx = parseFloat(cs.getPropertyValue("--fx")), fy = parseFloat(cs.getPropertyValue("--fy"));
+          const px = b.left + b.width * (isNaN(fx) ? 0.5 : fx);
+          const py = b.top + b.height * (isNaN(fy) ? 0.4 : fy);
+          if (py < 40 || py > window.innerHeight - 120) return null;
+          return { x: px - box.left, y: py - box.top };
+        }).filter(Boolean);
       }
-      x += (tx - x) * 0.14;
-      y += (ty - y) * 0.14;
-      r += (tr - r) * 0.12;
-      paint();
-      const settling = Math.abs(tx - x) > 0.4 || Math.abs(ty - y) > 0.4 || Math.abs(tr - r) > 0.4;
-      if (settling || drifting()) raf = requestAnimationFrame(frame);
-    }
-    const kick = () => { if (!raf) raf = requestAnimationFrame(frame); };
-    const aim = (clientX, clientY) => {
-      const rect = panel.getBoundingClientRect();
-      tx = clientX - rect.left;
-      ty = clientY - rect.top;
-      if (r < 2) { x = tx; y = ty; }
-      tr = radius();
-    };
-
-    if (finePointer) {
-      panel.addEventListener("pointermove", (e) => { if (e.pointerType === "mouse") { aim(e.clientX, e.clientY); kick(); } });
-      panel.addEventListener("pointerleave", () => { tr = 0; kick(); });
-    } else {
-      // Toque: o dedo vira a lanterna enquanto encosta na tela.
-      const touch = (e) => { const p = e.touches[0]; if (!p) return; touching = true; aim(p.clientX, p.clientY); kick(); };
-      panel.addEventListener("touchstart", touch, { passive: true });
-      panel.addEventListener("touchmove", touch, { passive: true });
-      const release = () => { touching = false; kick(); };
-      panel.addEventListener("touchend", release, { passive: true });
-      panel.addEventListener("touchcancel", release, { passive: true });
-      if (reduceMotion) {
-        // Sem animação: deixa um pedaço da arte visível, parado.
-        x = tx = panel.clientWidth * 0.5; y = ty = 150; r = tr = radius();
+      function paint() {
+        layer.style.setProperty("--x", `${x.toFixed(1)}px`);
+        layer.style.setProperty("--y", `${y.toFixed(1)}px`);
+        layer.style.setProperty("--r", `${Math.max(0, r).toFixed(1)}px`);
+      }
+      function frame(t) {
+        raf = 0;
+        if (touring() && t >= nextAt) {
+          const list = spots();
+          if (list.length) {
+            stop = (stop + 1) % list.length;
+            tx = list[stop].x; ty = list[stop].y; tr = Math.min(radius(), 170);
+            if (r < 2) { x = tx; y = ty; }
+          } else tr = 0;
+          nextAt = t + 3600;
+        }
+        const k = touring() ? 0.045 : 0.14;
+        x += (tx - x) * k;
+        y += (ty - y) * k;
+        r += (tr - r) * 0.1;
         paint();
+        const settling = Math.abs(tx - x) > 0.4 || Math.abs(ty - y) > 0.4 || Math.abs(tr - r) > 0.4;
+        if (settling) raf = requestAnimationFrame(frame);
+        else if (touring()) { clearTimeout(wait); wait = setTimeout(kick, Math.max(60, nextAt - performance.now())); }
       }
-    }
-    new IntersectionObserver(([e]) => { visible = e.isIntersecting; kick(); }).observe(panel);
-    toy.onActive = kick;
-    kick();
+      const kick = () => { if (!raf) raf = requestAnimationFrame(frame); };
+      const aim = (cx, cy) => {
+        const box = panel.getBoundingClientRect();
+        tx = cx - box.left;
+        ty = cy - box.top;
+        if (r < 2) { x = tx; y = ty; }
+        tr = radius();
+      };
+
+      if (finePointer) {
+        panel.addEventListener("pointermove", (e) => { if (e.pointerType === "mouse") { last = e; aim(e.clientX, e.clientY); kick(); } });
+        panel.addEventListener("pointerleave", () => { last = null; tr = 0; kick(); });
+        // Rolando sem mexer o mouse, o círculo continua embaixo do cursor.
+        window.addEventListener("scroll", () => { if (last && current === name) { aim(last.clientX, last.clientY); kick(); } }, { passive: true });
+      } else {
+        const touch = (e) => { const p = e.touches[0]; if (!p) return; touching = true; aim(p.clientX, p.clientY); kick(); };
+        panel.addEventListener("touchstart", touch, { passive: true });
+        panel.addEventListener("touchmove", touch, { passive: true });
+        const release = () => { touching = false; nextAt = performance.now() + 1400; kick(); };
+        panel.addEventListener("touchend", release, { passive: true });
+        panel.addEventListener("touchcancel", release, { passive: true });
+      }
+      onPanel.push((now) => {
+        if (now !== name) { tr = 0; r = 0; paint(); return; }
+        if (!finePointer && reduceMotion) {
+          // Sem animação: deixa um pedaço da primeira arte visível, parado.
+          requestAnimationFrame(() => { const s = spots()[0]; if (s) { x = tx = s.x; y = ty = s.y; r = tr = Math.min(radius(), 170); paint(); } });
+          return;
+        }
+        stop = -1; nextAt = 0; kick();
+      });
+    });
   }
 
   /* ---------- Projetos ---------- */
@@ -627,12 +650,15 @@
   let caseFromPage = false;
   let caseId = null;
 
+  // Toda imagem de projeto leva o aviso de dados fictícios, junto da legenda.
+  const fakeTag = () => D.mediaNote ? `<span class="fake-tag">${icon("info-fill")}${esc(D.mediaNote)}</span>` : "";
+  const caption = (m) => `<figcaption>${fakeTag()}${m.caption ? `<span>${esc(m.caption)}</span>` : ""}</figcaption>`;
   function renderMedia(m) {
     if (m.type === "phones") {
       return `<figure class="case-figure"><div class="case-phones">${m.items.map((it) =>
-        `<img src="${it.src}" width="${it.width}" height="${it.height}" alt="${esc(it.alt)}" loading="lazy" decoding="async">`).join("")}</div>${m.caption ? `<figcaption>${esc(m.caption)}</figcaption>` : ""}</figure>`;
+        `<img src="${it.src}" width="${it.width}" height="${it.height}" alt="${esc(it.alt)}" loading="lazy" decoding="async">`).join("")}</div>${caption(m)}</figure>`;
     }
-    return `<figure class="case-figure"><img src="${m.src}" width="${m.width}" height="${m.height}" alt="${esc(m.alt)}" loading="lazy" decoding="async">${m.caption ? `<figcaption>${esc(m.caption)}</figcaption>` : ""}</figure>`;
+    return `<figure class="case-figure"><img src="${m.src}" width="${m.width}" height="${m.height}" alt="${esc(m.alt)}" loading="lazy" decoding="async">${caption(m)}</figure>`;
   }
 
   function openCase(id) {
@@ -713,8 +739,8 @@
     document.body.dataset.view = name;
     toy.active = name === "inicio";
     if (toy.active && toy.start) toy.start();
-    if (toy.active && toy.onActive) toy.onActive();
     window.scrollTo(0, 0);
+    onPanel.forEach((fn) => fn(name));
     const titles = { inicio: "Engenharia de Dados", projetos: "Projetos", lab: "Laboratório", perfil: "Perfil" };
     document.title = `${D.name} | ${titles[name]}`;
     return true;
@@ -795,128 +821,414 @@
     return out;
   }
 
+  const ARROW = `<svg viewBox="0 0 56 28" aria-hidden="true"><path d="M53 5C38 1 18 4 6 19" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M5 9.5 6 19l9.5-.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
   function renderLab() {
     const L = D.lab;
     $("[data-lab-title]").textContent = L.title;
     $("[data-lab-sub]").textContent = L.sub;
-    const tile = (t) => {
-      const media = t.image
-        ? `<span class="tile-img"><img src="${t.image.src}" width="${t.image.width}" height="${t.image.height}" alt="${esc(t.image.alt)}" loading="lazy" decoding="async"></span>`
-        : `<pre class="tile-code"><code>${highlight(t.code, t.lang)}</code></pre>`;
-      return `<a class="tile${t.span === 2 ? " span-2" : ""}" href="${t.url}" target="_blank" rel="noopener" aria-label="${esc(t.name)}, abrir no GitHub">
-        <span class="tile-bar"><span class="tile-dots" aria-hidden="true"><i></i><i></i><i></i></span><span class="tile-name">${esc(t.name)}</span><span class="tile-open">${icon("arrow-up-right")}</span></span>
+    const win = (f, url) => {
+      const media = f.image
+        ? `<span class="tile-img"><img src="${f.image.src}" width="${f.image.width}" height="${f.image.height}" alt="${esc(f.image.alt)}" loading="lazy" decoding="async">${fakeTag()}</span>`
+        : `<pre class="tile-code"><code>${highlight(f.code, f.lang)}</code></pre>`;
+      return `<a class="tile" href="${url}" target="_blank" rel="noopener" aria-label="${esc(f.name)}, abrir no GitHub">
+        <span class="tile-bar"><span class="tile-dots" aria-hidden="true"><i></i><i></i><i></i></span><span class="tile-name">${esc(f.name)}</span><span class="tile-open">${icon("arrow-up-right")}</span></span>
         ${media}
       </a>`;
     };
-    const note = `<div class="note"><div class="note-bar"></div><div class="note-body"><h2 class="note-title">${esc(L.note.title)}</h2>${L.note.paragraphs.map((p) => `<p>${p}</p>`).join("")}</div></div>`;
-    const [first, ...others] = L.tiles;
-    $("[data-lab-grid]").innerHTML = tile(first) + note + others.map(tile).join("");
+    $("[data-lab-projects]").innerHTML = L.projects.map((p, i) => `
+      <article class="lab-project" data-anchor="lab-${p.id}" aria-labelledby="lp-${p.id}">
+        <header class="lp-head">
+          <span class="lp-num" aria-hidden="true">${String(i + 1).padStart(2, "0")}</span>
+          <h2 class="lp-name" id="lp-${p.id}">${esc(p.name)}</h2>
+          <span class="lp-origin">${esc(p.origin)}</span>
+        </header>
+        <div class="lp-body">
+          <div class="lp-files">${p.files.map((f) => win(f, p.url)).join("")}</div>
+          <aside class="lp-note" aria-label="Anotação sobre ${esc(p.name)}">
+            <span class="lp-arrow">${ARROW}</span>
+            <p class="lp-text">${esc(p.note.text)}</p>
+            <ul class="lp-points">${p.note.points.map((t) => `<li>${esc(t)}</li>`).join("")}</ul>
+            <a class="lp-link" href="${p.url}" target="_blank" rel="noopener">ver no GitHub ${icon("arrow-up-right")}</a>
+          </aside>
+        </div>
+      </article>`).join("");
   }
 
   /* ---------- Adesivos ---------- */
+  // Cada adesivo da cartela descola de verdade: a borda puxada dobra por cima dele (o verso aparece),
+  // e quando quase tudo soltou ele vira e vai para o cursor. Dá para colar em qualquer lugar do laboratório.
   function initBoard() {
     const B = D.board;
-    const desk = $("[data-board]");
+    const lab = $("[data-lab]");
     const paper = $("[data-paper]");
+    const sheet = $(".board-sheet");
     const host = $("[data-stickers]");
+    const byId = Object.fromEntries(B.stickers.map((s) => [s.id, s]));
     $("[data-board-title]").textContent = B.title;
     $("[data-todo]").innerHTML = B.todo.map((t) => `<li${t.done ? ' class="done"' : ""}><span>${esc(t.text)}</span>${t.done ? '<span class="sr-only"> (feito)</span>' : ""}</li>`).join("");
-    host.innerHTML = B.stickers.map((s) =>
-      `<div class="sticker-slot" data-slot="${s.id}"><button class="sticker" type="button" data-sticker="${s.id}" style="--c:${s.color}" aria-label="Adesivo ${esc(s.label)}: colar no papel">${icon(s.id)}</button></div>`
-    ).join("");
+    const face = (s) => `<span class="st-face">${icon(s.id)}</span>`;
+    host.innerHTML = B.stickers.map((s) => `
+      <button class="sticker" type="button" data-sticker="${s.id}" style="--c:${s.color}" aria-label="Adesivo ${esc(s.label)}: colar no papel">
+        <span class="peel" aria-hidden="true">
+          <span class="peel-hole"></span>
+          <span class="peel-front">${face(s)}</span>
+          <span class="peel-shade"><span class="peel-flap"><span class="peel-back"></span></span></span>
+        </span>
+      </button>`).join("");
 
-    const KEY = "pedro-adesivos";
-    let placed = store.get(KEY) || {};
+    const KEY = "pedro-adesivos-v3";
+    const MAX = 40;
+    let items = (store.get(KEY) || []).filter((it) => it && byId[it.k]);
+    const save = () => store.set(KEY, items);
 
-    const size = () => $(".sticker-slot", host).getBoundingClientRect().width;
-    function put(id, x, y, rot) {
-      const s = B.stickers.find((k) => k.id === id);
-      if (!s) return;
-      $(`[data-placed="${id}"]`, desk)?.remove();
+    /* --- Geometria da dobra --- */
+    // Quadrado do adesivo (com folga) cortado pela reta da dobra. side = 1: parte ainda colada; -1: parte solta.
+    function cut(S, o, n, side) {
+      const m = 8, box = [[-m, -m], [S + m, -m], [S + m, S + m], [-m, S + m]], out = [];
+      const f = (p) => side * ((p[0] - o[0]) * n[0] + (p[1] - o[1]) * n[1]);
+      for (let i = 0; i < 4; i++) {
+        const a = box[i], b = box[(i + 1) % 4], fa = f(a), fb = f(b);
+        if (fa >= 0) out.push(a);
+        if ((fa >= 0) !== (fb >= 0)) { const t = fa / (fa - fb); out.push([a[0] + t * (b[0] - a[0]), a[1] + t * (b[1] - a[1])]); }
+      }
+      return out;
+    }
+    const poly = (pts, off = 0) => pts.length > 2
+      ? `polygon(${pts.map((p) => `${(p[0] + off).toFixed(1)}px ${(p[1] + off).toFixed(1)}px`).join(", ")})`
+      : "polygon(0 0, 0 0, 0 0)";
+    // O que sobra colado, em fração da área do círculo.
+    function stuck(S, o, n) {
+      const R = S / 2;
+      const g = Math.max(-R, Math.min(R, (R - o[0]) * n[0] + (R - o[1]) * n[1]));
+      const cap = R * R * Math.acos(g / R) - g * Math.sqrt(R * R - g * g);
+      return 1 - cap / (Math.PI * R * R);
+    }
+
+    const states = new Map();
+    function state(btn) {
+      if (!states.has(btn)) {
+        states.set(btn, {
+          btn, s: byId[btn.dataset.sticker], u: [Math.SQRT1_2, Math.SQRT1_2], v: [0, 0], tw: 0, busy: false,
+          peel: $(".peel", btn), front: $(".peel-front", btn), shade: $(".peel-shade", btn), flap: $(".peel-flap", btn), back: $(".peel-back", btn)
+        });
+      }
+      return states.get(btn);
+    }
+    // u: direção (do centro para fora) da borda que está sendo puxada.
+    function grabDir(st, cx, cy) {
+      const r = st.peel.getBoundingClientRect();
+      const dx = cx - (r.left + r.width / 2), dy = cy - (r.top + r.height / 2);
+      const d = Math.hypot(dx, dy);
+      st.u = d < r.width * 0.12 ? [Math.SQRT1_2, Math.SQRT1_2] : [dx / d, dy / d];
+    }
+    const inward = (st, k) => { const S = st.peel.offsetWidth; return [-st.u[0] * k * S, -st.u[1] * k * S]; };
+
+    function geometry(st) {
+      const S = st.peel.offsetWidth;
+      const L = Math.hypot(st.v[0], st.v[1]);
+      if (L < 0.5 || !S) return null;
+      const n = [st.v[0] / L, st.v[1] / L];
+      const edge = [S / 2 + st.u[0] * S / 2, S / 2 + st.u[1] * S / 2];
+      const o = [edge[0] + st.v[0] / 2, edge[1] + st.v[1] / 2];
+      return { S, L, n, o };
+    }
+    function draw(st) {
+      const g = geometry(st);
+      if (!g) {
+        st.front.style.clipPath = st.front.style.webkitClipPath = "";
+        st.shade.style.visibility = "hidden";
+        st.btn.classList.remove("is-peeling");
+        return 1;
+      }
+      const { S, L, n, o } = g;
+      st.btn.classList.add("is-peeling");
+      const reflect = (p) => { const d = 2 * ((p[0] - o[0]) * n[0] + (p[1] - o[1]) * n[1]); return [p[0] - d * n[0], p[1] - d * n[1]]; };
+      st.front.style.clipPath = st.front.style.webkitClipPath = poly(cut(S, o, n, 1));
+      st.flap.style.clipPath = st.flap.style.webkitClipPath = poly(cut(S, o, n, -1).map(reflect), S);
+      st.shade.style.visibility = "visible";
+      // O verso é o círculo espelhado na reta da dobra: p' = (I - 2nnᵀ)p + 2(o·n)n.
+      const k = 2 * (o[0] * n[0] + o[1] * n[1]);
+      st.back.style.transform = `matrix(${1 - 2 * n[0] * n[0]}, ${-2 * n[0] * n[1]}, ${-2 * n[0] * n[1]}, ${1 - 2 * n[1] * n[1]}, ${k * n[0]}, ${k * n[1]})`;
+      // Sombra da dobra no verso, mais forte perto do vinco.
+      const ang = Math.atan2(-n[0], n[1]);
+      const len = S * (Math.abs(n[0]) + Math.abs(n[1]));
+      const at = ((o[0] - S / 2) * -n[0] + (o[1] - S / 2) * -n[1]) / len + 0.5;
+      const w = Math.max(3, Math.min(L * 0.35, S * 0.3)) / len;
+      st.back.style.backgroundImage = `linear-gradient(${(ang * 180 / Math.PI).toFixed(1)}deg, rgb(0 0 0 / 0.16) ${(at * 100).toFixed(1)}%, rgb(0 0 0 / 0.05) ${((at + w * 0.4) * 100).toFixed(1)}%, rgb(0 0 0 / 0) ${((at + w) * 100).toFixed(1)}%)`;
+      const lift = Math.min(1, L / S);
+      st.shade.style.filter = `drop-shadow(${(n[0] * (1 + lift * 3)).toFixed(1)}px ${(n[1] * (1 + lift * 3) + 1).toFixed(1)}px ${(1.2 + lift * 5).toFixed(1)}px rgb(0 0 0 / ${(0.22 - lift * 0.06).toFixed(3)}))`;
+      return stuck(S, o, n);
+    }
+    function tween(st, target, dur, each) {
+      cancelAnimationFrame(st.tw);
+      if (reduceMotion) { st.v = target.slice(); draw(st); return; }
+      const from = st.v.slice(), t0 = performance.now();
+      const step = (t) => {
+        const k = Math.min(1, (t - t0) / dur), e = 1 - Math.pow(1 - k, 3);
+        st.v = [from[0] + (target[0] - from[0]) * e, from[1] + (target[1] - from[1]) * e];
+        const left = draw(st);
+        if (each && each(left) === false) return;
+        if (k < 1) st.tw = requestAnimationFrame(step);
+      };
+      st.tw = requestAnimationFrame(step);
+    }
+
+    /* --- Adesivo solto, voando na tela --- */
+    const ease = (k) => 1 - Math.pow(1 - k, 3);
+    function makeGhost(s, size) {
       const el = document.createElement("span");
-      el.className = "placed";
-      el.dataset.placed = id;
+      el.className = "sticker-ghost";
+      el.style.cssText = `--c:${s.color};width:${size}px;height:${size}px`;
+      el.innerHTML = `<span class="ghost-flip"><span class="ghost-back"></span>${face(s)}</span>`;
+      document.body.appendChild(el);
+      const flip = $(".ghost-flip", el);
+      const g = { el, x: 0, y: 0, rot: 0, anim: 0 };
+      g.set = (x, y, rot, axis, deg) => {
+        g.x = x; g.y = y;
+        el.style.transform = `translate(${x.toFixed(1)}px, ${y.toFixed(1)}px) translate(-50%, -50%) rotate(${rot.toFixed(2)}deg)`;
+        flip.style.transform = deg ? `rotate3d(${axis[0].toFixed(3)}, ${axis[1].toFixed(3)}, 0, ${deg.toFixed(1)}deg)` : "none";
+      };
+      // Anima de onde está até "to()" (que pode mudar a cada quadro, como o cursor), virando de costas para frente.
+      g.fly = (from, to, rot, axis, dur, done) => {
+        cancelAnimationFrame(g.anim);
+        if (reduceMotion) { const p = to(); g.set(p.x, p.y, rot); g.rot = rot; done && done(); return; }
+        const t0 = performance.now();
+        const step = (t) => {
+          const k = Math.min(1, (t - t0) / dur), e = ease(k), p = to();
+          g.set(from.x + (p.x - from.x) * e, from.y + (p.y - from.y) * e, from.rot + (rot - from.rot) * e, axis, axis ? 180 * (1 - e) : 0);
+          if (k < 1) g.anim = requestAnimationFrame(step);
+          else { g.rot = rot; g.anim = 0; done && done(); }
+        };
+        g.anim = requestAnimationFrame(step);
+      };
+      g.follow = (x, y) => { if (!g.anim) g.set(x, y, g.rot); };
+      return g;
+    }
+
+    // Solta o adesivo da cartela: ele aparece virado no lugar da aba e gira de volta enquanto vai até o alvo.
+    function detach(st, to, dur, done) {
+      const g0 = geometry(st);
+      const r = st.peel.getBoundingClientRect();
+      const S = r.width;
+      let start = { x: r.left + S / 2, y: r.top + S / 2, rot: 0 }, axis = null;
+      if (g0) {
+        const { n, o } = g0;
+        const d = 2 * ((S / 2 - o[0]) * n[0] + (S / 2 - o[1]) * n[1]);
+        start = { x: r.left + S / 2 - d * n[0], y: r.top + S / 2 - d * n[1], rot: 0 };
+        axis = [-n[1], n[0]];
+      }
+      cancelAnimationFrame(st.tw);
+      st.btn.classList.add("is-peeled");
+      st.v = [0, 0];
+      draw(st);
+      const g = makeGhost(st.s, S);
+      const rot = Math.round(Math.random() * 28 - 14);
+      g.set(start.x, start.y, 0, axis, axis ? 180 : 0);
+      g.fly(start, to, rot, axis, dur, done);
+      return g;
+    }
+    function regrow(st) {
+      st.btn.classList.remove("is-peeled");
+      st.busy = false;
+    }
+
+    /* --- Adesivos colados --- */
+    const anchorOf = (id) => (id === "lab" ? lab : $(`[data-anchor="${id}"]`, lab));
+    function placedEl(it, slap) {
+      const s = byId[it.k];
+      const el = document.createElement("span");
+      el.className = `placed${slap ? " slap" : ""}`;
+      el.dataset.placed = it.k;
       el.setAttribute("role", "img");
       el.setAttribute("aria-label", `Adesivo ${s.label}`);
-      el.style.cssText = `--c:${s.color};--rot:${rot}deg;left:calc(${(x * 100).toFixed(2)}% - var(--s) / 2);top:calc(${(y * 100).toFixed(2)}% - var(--s) / 2);width:var(--s);height:var(--s)`;
-      el.innerHTML = icon(id);
-      desk.appendChild(el);
-      $(`[data-slot="${id}"]`, host).classList.add("used");
+      el.style.cssText = `--c:${s.color};--rot:${it.r}deg;left:${(it.x * 100).toFixed(2)}%;top:${(it.y * 100).toFixed(2)}%`;
+      el.innerHTML = face(s);
+      el._item = it;
+      return el;
     }
-    function sync() {
-      desk.style.setProperty("--s", `${Math.round(size())}px`);
-      Object.entries(placed).forEach(([id, p]) => put(id, p.x, p.y, p.rot));
+    function renderPlaced() {
+      $$(".placed", lab).forEach((el) => el.remove());
+      items.forEach((it) => { const a = anchorOf(it.a); if (a) a.appendChild(placedEl(it)); });
     }
-    function save(id, x, y) {
-      const rot = Math.round((Math.random() * 2 - 1) * 14);
-      placed[id] = { x, y, rot };
-      store.set(KEY, placed);
-      put(id, x, y, rot);
+    function stick(it) {
+      items.push(it);
+      if (items.length > MAX) { const old = items.shift(); $$(".placed", lab).find((el) => el._item === old)?.remove(); }
+      save();
+      const a = anchorOf(it.a);
+      if (a) a.appendChild(placedEl(it, !reduceMotion));
     }
-    function randomOnPaper(id) {
-      const d = desk.getBoundingClientRect();
-      const p = paper.getBoundingClientRect();
-      const x = (p.left - d.left + p.width * (0.15 + Math.random() * 0.7)) / d.width;
-      const y = (p.top - d.top + p.height * (0.2 + Math.random() * 0.6)) / d.height;
-      save(id, x, y);
+    const near = (el, x, y, pad) => { const r = el.getBoundingClientRect(); return x >= r.left - pad && x <= r.right + pad && y >= r.top - pad && y <= r.bottom + pad; };
+    // Onde o adesivo caiu: no elemento marcado mais próximo (projeto, papel, mesa) ou no laboratório.
+    function spotAt(x, y) {
+      if (near(sheet, x, y, 12)) return null;
+      const under = document.elementFromPoint(x, y);
+      if (!under || !lab.contains(under)) return null;
+      const a = under.closest("[data-anchor]") || lab;
+      const r = a.getBoundingClientRect();
+      return { a: a.dataset.anchor, x: (x - r.left) / r.width, y: (y - r.top) / r.height };
+    }
+    function randomOnPaper() {
+      return { a: "paper", x: 0.18 + Math.random() * 0.64, y: 0.3 + Math.random() * 0.55 };
+    }
+    // Ponto na tela de um lugar salvo (âncora + fração).
+    function screenOf(spot) {
+      const r = anchorOf(spot.a).getBoundingClientRect();
+      return { x: r.left + spot.x * r.width, y: r.top + spot.y * r.height };
     }
 
-    let drag = null;
-    let suppressClick = false;
+    /* --- Cartela: passar o mouse, puxar, tocar --- */
+    host.addEventListener("pointerover", (e) => {
+      const btn = e.target.closest("[data-sticker]");
+      if (!btn || e.pointerType !== "mouse" || btn.contains(e.relatedTarget)) return;
+      const st = state(btn);
+      if (st.busy) return;
+      grabDir(st, e.clientX, e.clientY);
+      tween(st, inward(st, 0.2), 300);
+    });
+    host.addEventListener("pointerout", (e) => {
+      const btn = e.target.closest("[data-sticker]");
+      if (!btn || e.pointerType !== "mouse" || btn.contains(e.relatedTarget)) return;
+      const st = state(btn);
+      if (!st.busy) tween(st, [0, 0], 350);
+    });
+
+    // Toque ou teclado: descola sozinho e voa para o papel.
+    function autoPlace(st) {
+      st.busy = true;
+      const spot = randomOnPaper();
+      const target = () => screenOf(spot);
+      let done = false;
+      const go = () => {
+        if (done) return;
+        done = true;
+        const g = detach(st, target, 560, () => {
+          g.el.remove();
+          stick({ k: st.s.id, ...spot, r: Math.round(g.rot) });
+          regrow(st);
+        });
+      };
+      tween(st, inward(st, 1.8), 360, (left) => { if (left <= 0.2) { go(); return false; } });
+      setTimeout(go, reduceMotion ? 0 : 420);
+    }
+
     host.addEventListener("pointerdown", (e) => {
       const btn = e.target.closest("[data-sticker]");
       if (!btn || e.button > 0) return;
+      const st = state(btn);
+      if (st.busy) return;
       e.preventDefault();
-      const r = btn.getBoundingClientRect();
-      const ghost = btn.cloneNode(true);
-      ghost.classList.add("dragging");
-      ghost.removeAttribute("data-sticker");
-      ghost.setAttribute("aria-hidden", "true");
-      ghost.style.width = `${r.width}px`;
-      ghost.style.height = `${r.height}px`;
-      ghost.style.left = `${r.left}px`;
-      ghost.style.top = `${r.top}px`;
-      document.body.appendChild(ghost);
-      drag = { id: btn.dataset.sticker, ghost, sx: e.clientX, sy: e.clientY, ox: e.clientX - r.left, oy: e.clientY - r.top, moved: false };
-      btn.setPointerCapture(e.pointerId);
+      st.busy = true;
+      try { btn.setPointerCapture(e.pointerId); } catch { /* segue sem captura */ }
+      if (Math.hypot(st.v[0], st.v[1]) < 1) grabDir(st, e.clientX, e.clientY);
+      tween(st, inward(st, 0.3), 220);
+      const t0 = performance.now();
+      let from = null, base = null, ghost = null, pointer = { x: e.clientX, y: e.clientY };
+      const move = (ev) => {
+        pointer = { x: ev.clientX, y: ev.clientY };
+        if (ghost) { ghost.follow(pointer.x, pointer.y); return; }
+        if (!from) {
+          if (Math.hypot(ev.clientX - e.clientX, ev.clientY - e.clientY) < 5) return;
+          cancelAnimationFrame(st.tw);
+          from = pointer; base = st.v.slice();
+        }
+        // A ponta da aba segue o dedo.
+        st.v = [base[0] + pointer.x - from.x, base[1] + pointer.y - from.y];
+        if (draw(st) <= 0.18) ghost = detach(st, () => pointer, 260);
+      };
+      const up = (ev) => {
+        btn.removeEventListener("pointermove", move);
+        btn.removeEventListener("pointerup", up);
+        btn.removeEventListener("pointercancel", up);
+        if (ghost) {
+          const g = ghost;
+          cancelAnimationFrame(g.anim); g.anim = 0;
+          g.el.style.visibility = "hidden";
+          const spot = ev.type === "pointerup" ? spotAt(ev.clientX, ev.clientY) : null;
+          g.el.style.visibility = "";
+          if (spot) { g.el.remove(); stick({ k: st.s.id, ...spot, r: Math.round(g.rot) }); regrow(st); }
+          else {
+            // Fora da página: volta para a cartela.
+            const r = st.peel.getBoundingClientRect();
+            g.fly({ x: g.x, y: g.y, rot: g.rot }, () => ({ x: r.left + r.width / 2, y: r.top + r.height / 2 }), 0, null, 280, () => { g.el.remove(); regrow(st); });
+          }
+        } else if (!from && ev.type === "pointerup" && performance.now() - t0 < 600) {
+          autoPlace(st);
+        } else {
+          tween(st, [0, 0], 400);
+          st.busy = false;
+        }
+      };
+      btn.addEventListener("pointermove", move);
+      btn.addEventListener("pointerup", up);
+      btn.addEventListener("pointercancel", up);
     });
-    host.addEventListener("pointermove", (e) => {
-      if (!drag) return;
-      if (Math.hypot(e.clientX - drag.sx, e.clientY - drag.sy) > 4) drag.moved = true;
-      drag.ghost.style.left = `${e.clientX - drag.ox}px`;
-      drag.ghost.style.top = `${e.clientY - drag.oy}px`;
-      drag.ghost.style.transform = `rotate(${Math.max(-12, Math.min(12, (e.clientX - drag.sx) / 12))}deg) scale(1.08)`;
-    });
-    const end = (e) => {
-      if (!drag) return;
-      const { id, ghost, moved } = drag;
-      drag = null;
-      suppressClick = true;
-      ghost.remove();
-      if (!moved) { randomOnPaper(id); return; }
-      const d = desk.getBoundingClientRect();
-      const inside = e.clientX >= d.left && e.clientX <= d.right && e.clientY >= d.top && e.clientY <= d.bottom;
-      const onSheet = e.target.closest && $(".board-sheet").contains(document.elementFromPoint(e.clientX, e.clientY));
-      if (inside && !onSheet) save(id, (e.clientX - d.left) / d.width, (e.clientY - d.top) / d.height);
-    };
-    host.addEventListener("pointerup", end);
-    host.addEventListener("pointercancel", () => { if (drag) { drag.ghost.remove(); drag = null; } });
     host.addEventListener("click", (e) => {
       const btn = e.target.closest("[data-sticker]");
-      if (!btn) return;
-      if (suppressClick) { suppressClick = false; return; }
-      randomOnPaper(btn.dataset.sticker);
-    });
-    $("[data-board-reset]").addEventListener("click", () => {
-      placed = {};
-      store.set(KEY, placed);
-      $$(".placed", desk).forEach((el) => el.remove());
-      $$(".sticker-slot", host).forEach((s) => s.classList.remove("used"));
+      if (btn && e.detail === 0 && !state(btn).busy) { grabDir(state(btn), 0, 0); autoPlace(state(btn)); }
     });
 
-    new ResizeObserver(() => { if (size()) desk.style.setProperty("--s", `${Math.round(size())}px`); }).observe(host);
-    const lab = $("#panel-lab");
-    new MutationObserver(() => { if (!lab.hidden) sync(); }).observe(lab, { attributes: true, attributeFilter: ["hidden"] });
+    /* --- Adesivos colados: dá para levantar e mudar de lugar (ou devolver à cartela) --- */
+    lab.addEventListener("pointerdown", (e) => {
+      const el = e.target.closest(".placed");
+      if (!el || e.button > 0) return;
+      e.preventDefault();
+      const it = el._item;
+      const s = byId[it.k];
+      el.classList.remove("slap");
+      el.classList.add("lifted");
+      let ghost = null;
+      const sx = e.clientX, sy = e.clientY;
+      const move = (ev) => {
+        if (!ghost) {
+          if (Math.hypot(ev.clientX - sx, ev.clientY - sy) < 5) return;
+          const r = el.getBoundingClientRect();
+          ghost = makeGhost(s, el.offsetWidth);
+          ghost.rot = it.r;
+          ghost.set(r.left + r.width / 2, r.top + r.height / 2, it.r);
+          el.remove();
+          ghost.ox = ghost.x - sx; ghost.oy = ghost.y - sy;
+        }
+        ghost.follow(ev.clientX + ghost.ox, ev.clientY + ghost.oy);
+      };
+      const up = (ev) => {
+        window.removeEventListener("pointermove", move);
+        window.removeEventListener("pointerup", up);
+        window.removeEventListener("pointercancel", up);
+        el.classList.remove("lifted");
+        if (!ghost) return;
+        const x = ghost.x, y = ghost.y;
+        ghost.el.style.visibility = "hidden";
+        const onSheet = near(sheet, x, y, 12);
+        const spot = ev.type === "pointerup" && !onSheet ? spotAt(x, y) : null;
+        items = items.filter((i) => i !== it);
+        if (spot) { ghost.el.remove(); stick({ k: it.k, ...spot, r: it.r }); return; }
+        if (onSheet) {
+          // Devolvido à cartela.
+          const slot = $(`[data-sticker="${it.k}"] .peel`, host).getBoundingClientRect();
+          ghost.el.style.visibility = "";
+          ghost.fly({ x, y, rot: it.r }, () => ({ x: slot.left + slot.width / 2, y: slot.top + slot.height / 2 }), 0, null, 260, () => ghost.el.remove());
+          save();
+          return;
+        }
+        // Caiu fora: volta para onde estava.
+        ghost.el.remove();
+        stick(it);
+      };
+      window.addEventListener("pointermove", move);
+      window.addEventListener("pointerup", up);
+      window.addEventListener("pointercancel", up);
+    });
+
+    $("[data-board-reset]").addEventListener("click", () => {
+      items = [];
+      save();
+      $$(".placed", lab).forEach((el) => el.remove());
+    });
+
+    // Os colados têm o mesmo tamanho dos da cartela.
+    const fit = () => { const w = $(".peel", host)?.offsetWidth; if (w) lab.style.setProperty("--s", `${w}px`); };
+    new ResizeObserver(fit).observe(host);
+    renderPlaced();
   }
 
   /* ---------- Perfil ---------- */
@@ -957,7 +1269,7 @@
     renderProfile();
     initBoard();
     initToy();
-    initHeroArt();
+    initArts();
     initNav();
     route();
   }
