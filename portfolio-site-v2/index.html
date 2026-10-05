@@ -18,7 +18,7 @@
   <script src="assets/js/main.js" defer></script>
 </head>
 <body>
-  <!-- Filtro que "pixeliza" os títulos em serifa (mesma técnica do site de referência). -->
+  <!-- Filtro que "pixeliza" o destaque do pôster (mesma técnica do site de referência). -->
   <svg class="defs" width="0" height="0" aria-hidden="true" focusable="false">
     <filter id="pixelate" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB">
       <feMorphology in="SourceGraphic" operator="dilate" radius="0.6" result="fat"/>
@@ -42,7 +42,7 @@
 
   <header class="top-nav">
     <a class="nav-left" href="#" data-go="inicio" aria-label="Pedro Henrique, voltar ao início">
-      <span class="nav-logo" aria-hidden="true">P</span>
+      <span class="nav-logo" aria-hidden="true">ph<i class="nav-caret"></i></span>
       <span class="nav-identity">
         <span class="nav-name" data-name>Pedro Henrique</span>
         <span class="nav-role" data-role>engenharia de dados</span>
@@ -65,21 +65,10 @@
         <div class="toy" data-toy>
           <div class="toy-float">
             <div class="console" data-console>
-              <div class="joycon joycon--left" role="group" aria-label="Controle esquerdo">
-                <button class="jc-btn jc-minus" type="button" data-btn="minus" aria-label="Botão menos: voltar ao menu"></button>
-                <span class="jc-stick jc-stick--left" aria-hidden="true"></span>
-                <div class="jc-pad">
-                  <button class="jc-round jc-n" type="button" data-btn="up" aria-label="Direcional para cima"></button>
-                  <button class="jc-round jc-w" type="button" data-btn="left" aria-label="Direcional para a esquerda"></button>
-                  <button class="jc-round jc-e" type="button" data-btn="right" aria-label="Direcional para a direita"></button>
-                  <button class="jc-round jc-s" type="button" data-btn="down" aria-label="Direcional para baixo"></button>
-                </div>
-                <span class="jc-capture" aria-hidden="true"></span>
-              </div>
-
-              <div class="console-body">
+              <div class="hh-face">
+                <span class="hh-led" aria-hidden="true"></span>
                 <div class="console-screen" data-screen-wrap>
-                  <canvas width="96" height="54" data-screen aria-hidden="true"></canvas>
+                  <canvas width="96" height="72" data-screen aria-hidden="true"></canvas>
                   <div class="scr-menu" data-menu>
                     <div class="scr-top">
                       <span class="scr-user"><img src="assets/img/avatar.webp" alt="" width="40" height="40"></span>
@@ -101,33 +90,32 @@
                 </div>
               </div>
 
-              <div class="joycon joycon--right" role="group" aria-label="Controle direito">
-                <button class="jc-btn jc-plus" type="button" data-btn="plus" aria-label="Botão mais: jogar"></button>
-                <div class="jc-pad">
-                  <button class="jc-round jc-n" type="button" data-btn="x" aria-label="Botão X"><span aria-hidden="true">X</span></button>
-                  <button class="jc-round jc-w" type="button" data-btn="y" aria-label="Botão Y"><span aria-hidden="true">Y</span></button>
-                  <button class="jc-round jc-e" type="button" data-btn="a" aria-label="Botão A: jogar ou pular"><span aria-hidden="true">A</span></button>
-                  <button class="jc-round jc-s" type="button" data-btn="b" aria-label="Botão B: voltar ao menu"><span aria-hidden="true">B</span></button>
-                </div>
-                <span class="jc-stick jc-stick--right" aria-hidden="true"></span>
-                <button class="jc-home" type="button" data-btn="home" aria-label="Início: voltar ao menu de jogos"></button>
+              <div class="hh-dpad" role="group" aria-label="Direcional">
+                <button class="hh-d hh-up" type="button" data-btn="up" aria-label="Cima"></button>
+                <button class="hh-d hh-left" type="button" data-btn="left" aria-label="Esquerda"></button>
+                <span class="hh-d hh-center" aria-hidden="true"></span>
+                <button class="hh-d hh-right" type="button" data-btn="right" aria-label="Direita"></button>
+                <button class="hh-d hh-down" type="button" data-btn="down" aria-label="Baixo"></button>
               </div>
+
+              <div class="hh-speaker" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+
+              <div class="hh-abxy" role="group" aria-label="Botões">
+                <button class="hh-b hh-x" type="button" data-btn="x" aria-label="Botão X"><span aria-hidden="true">X</span></button>
+                <button class="hh-b hh-y" type="button" data-btn="y" aria-label="Botão Y"><span aria-hidden="true">Y</span></button>
+                <button class="hh-b hh-a" type="button" data-btn="a" aria-label="Botão A: jogar ou pular"><span aria-hidden="true">A</span></button>
+                <button class="hh-b hh-bb" type="button" data-btn="b" aria-label="Botão B: voltar ao menu"><span aria-hidden="true">B</span></button>
+              </div>
+
+              <button class="hh-pill hh-fn" type="button" data-btn="home" aria-label="Menu de jogos"><span class="hh-label" aria-hidden="true">menu</span></button>
+              <button class="hh-pill hh-select" type="button" data-btn="minus" aria-label="Select: voltar ao menu"><span class="hh-label" aria-hidden="true">select</span></button>
+              <button class="hh-pill hh-start" type="button" data-btn="plus" aria-label="Start: jogar"><span class="hh-label" aria-hidden="true">start</span></button>
+
+              <span class="hh-stick hh-stick--l" aria-hidden="true"></span>
+              <span class="hh-stick hh-stick--r" aria-hidden="true"></span>
             </div>
           </div>
         </div>
-
-          <div class="pad" data-pad role="group" aria-label="Controle de toque">
-            <div class="pad-dpad">
-              <button class="pad-k pad-up" type="button" data-btn="up" aria-label="Cima"></button>
-              <button class="pad-k pad-left" type="button" data-btn="left" aria-label="Esquerda"></button>
-              <button class="pad-k pad-right" type="button" data-btn="right" aria-label="Direita"></button>
-              <button class="pad-k pad-down" type="button" data-btn="down" aria-label="Baixo"></button>
-            </div>
-            <div class="pad-ab">
-              <button class="pad-k pad-b" type="button" data-btn="b" aria-label="B: voltar ao menu">B</button>
-              <button class="pad-k pad-a" type="button" data-btn="a" aria-label="A: jogar ou pular">A</button>
-            </div>
-          </div>
         </div>
 
         <div class="poster-side poster-right">

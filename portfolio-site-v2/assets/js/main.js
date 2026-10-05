@@ -52,7 +52,7 @@
   function initToy() {
     const canvas = $("[data-screen]");
     const ctx = canvas.getContext("2d");
-    const W = 96, H = 54;
+    const W = 96, H = 72;
     const css = getComputedStyle(document.documentElement);
     const C = Object.fromEntries(["bg", "dot", "bar", "bar-top", "block", "ground", "floor", "duck", "beak", "bad", "sel"]
       .map((k) => [k, css.getPropertyValue(`--scr-${k}`).trim()]));
@@ -97,13 +97,13 @@
     const GAMES = [
       {
         id: "limpeza", name: "Limpeza de dados", how: "Pegue as linhas verdes com a tabela e desvie das vermelhas.",
-        reset() { this.p = { x: W / 2 - 9, y: 46, w: 18, h: 5 }; this.items = []; this.t = 0; this.score = 0; this.life = 3; this.hurt = 0; this.target = null; this.dead = false; },
+        reset() { this.p = { x: W / 2 - 9, y: 62, w: 18, h: 5 }; this.items = []; this.t = 0; this.score = 0; this.life = 3; this.hurt = 0; this.target = null; this.dead = false; },
         step() {
           this.t++;
           const every = Math.max(14, 36 - Math.floor(this.score / 2));
           if (this.t % every === 0) {
             const bad = Math.random() < Math.min(0.5, 0.28 + this.score / 90);
-            this.items.push({ x: rand(2, W - 10), y: 8, w: 8, h: 3, bad, vy: 0.42 + Math.random() * 0.22 + this.score * 0.008 });
+            this.items.push({ x: rand(2, W - 10), y: 10, w: 8, h: 3, bad, vy: 0.5 + Math.random() * 0.25 + this.score * 0.009 });
           }
           if (this.target !== null) this.p.x += clamp(this.target - (this.p.x + this.p.w / 2), -2.2, 2.2);
           this.p.x = clamp(this.p.x, 1, W - this.p.w - 1);
@@ -121,7 +121,7 @@
           backdrop(g, W, H);
           if (this.hurt % 4 > 1) px(g, 0, 0, W, H, C.bad);
           this.items.forEach((it) => rowSprite(g, it.x, it.y, it.bad));
-          floor(g, 52);
+          floor(g, 68);
           tableSprite(g, this.p.x, this.p.y, this.p.w, this.p.h);
         },
         hud() { return `${"♥".repeat(this.life)}${"♡".repeat(3 - this.life)} ${this.score} linhas`; },
@@ -130,23 +130,23 @@
       },
       {
         id: "pato", name: "Pato debugger", how: "Toque ou aperte A para o pato voar entre as barras do gráfico.",
-        reset() { this.d = { x: 20, y: 24, vy: 0, w: 6, h: 5 }; this.bars = []; this.t = 0; this.score = 0; this.dead = false; },
+        reset() { this.d = { x: 20, y: 32, vy: 0, w: 6, h: 5 }; this.bars = []; this.t = 0; this.score = 0; this.dead = false; },
         step() {
           const d = this.d;
           this.t++;
           d.vy = Math.min(d.vy + 0.11, 1.8);
           d.y += d.vy;
-          if (this.t % 62 === 1) this.bars.push({ x: W, w: 8, gap: rand(20, 37), size: 23, passed: false });
+          if (this.t % 62 === 1) this.bars.push({ x: W, w: 8, gap: rand(22, 50), size: 26, passed: false });
           for (const b of this.bars) {
             b.x -= 0.75 + this.score * 0.012;
             if (!b.passed && b.x + b.w < d.x) { b.passed = true; this.score++; }
             const top = { x: b.x, y: 0, w: b.w, h: b.gap - b.size / 2 };
-            const bottom = { x: b.x, y: b.gap + b.size / 2, w: b.w, h: 50 - (b.gap + b.size / 2) };
+            const bottom = { x: b.x, y: b.gap + b.size / 2, w: b.w, h: 66 - (b.gap + b.size / 2) };
             if (overlap({ x: d.x + 1, y: d.y + 1, w: 4, h: 3 }, top) || overlap({ x: d.x + 1, y: d.y + 1, w: 4, h: 3 }, bottom)) this.dead = true;
           }
           this.bars = this.bars.filter((b) => b.x + b.w > -2);
           if (d.y < 0) { d.y = 0; d.vy = 0; }
-          if (d.y + d.h >= 50) this.dead = true;
+          if (d.y + d.h >= 66) this.dead = true;
         },
         draw(g) {
           backdrop(g, W, H, 60);
@@ -155,10 +155,10 @@
             const y2 = b.gap + b.size / 2;
             px(g, b.x, 0, b.w, topH, C.bar);
             px(g, b.x, topH - 1, b.w, 1, C["bar-top"]);
-            px(g, b.x, y2, b.w, 50 - y2, C.bar);
+            px(g, b.x, y2, b.w, 66 - y2, C.bar);
             px(g, b.x, y2, b.w, 1, C["bar-top"]);
           }
-          floor(g, 50);
+          floor(g, 66);
           drawDuck(g, this.d.x, this.d.y, this.d.vy < 0 ? 1 : 0);
         },
         hud() { return `${this.score} barras`; },
@@ -169,7 +169,7 @@
         id: "deploy", name: "Deploy em produção", how: "Pule os bugs com A ou um toque. A velocidade aumenta com o tempo.",
         reset() {
           this.d = { x: 12, y: 0, vy: 0, w: 6, h: 5 }; this.obs = []; this.t = 0; this.score = 0; this.speed = 0.95; this.next = 50; this.dead = false;
-          this.line = Array.from({ length: 30 }, () => rand(16, 34));
+          this.line = Array.from({ length: 30 }, () => rand(20, 46));
         },
         step() {
           this.t++;
@@ -182,10 +182,10 @@
             this.obs.push({ x: W, w: 6, h: tall ? 10 : 5 });
             this.next = Math.round(rand(50, 100) / (this.speed / 0.95));
           }
-          const box = { x: d.x + 1, y: 42 + d.y, w: 4, h: 5 };
+          const box = { x: d.x + 1, y: 58 + d.y, w: 4, h: 5 };
           for (const o of this.obs) {
             o.x -= this.speed;
-            if (overlap(box, { x: o.x + 1, y: 47 - o.h, w: o.w - 2, h: o.h })) this.dead = true;
+            if (overlap(box, { x: o.x + 1, y: 63 - o.h, w: o.w - 2, h: o.h })) this.dead = true;
           }
           this.obs = this.obs.filter((o) => o.x > -8);
         },
@@ -199,12 +199,12 @@
             const b = this.line[(i + shift + 1) % 30];
             for (let k = 0; k < 6; k++) px(g, i * 6 + k - off, a + ((b - a) * k) / 6, 1, 1, C.dot);
           }
-          floor(g, 47);
+          floor(g, 63);
           for (const o of this.obs) {
-            drawBug(g, o.x, 47 - 5);
-            if (o.h > 5) drawBug(g, o.x, 47 - 10);
+            drawBug(g, o.x, 63 - 5);
+            if (o.h > 5) drawBug(g, o.x, 63 - 10);
           }
-          drawDuck(g, this.d.x, 42 + this.d.y, this.t / 4);
+          drawDuck(g, this.d.x, 58 + this.d.y, this.t / 4);
         },
         hud() { return `v1.${this.score} no ar`; },
         input(b) { if (["a", "up", "x", "plus"].includes(b) && this.d.y === 0) this.d.vy = -2.25; },
@@ -213,8 +213,8 @@
       {
         id: "snake", name: "Snake do pipeline", how: "Guie o pipeline até as linhas de dados. Não bata nas bordas nem nele mesmo.",
         reset() {
-          this.cols = 22; this.rows = 10; this.cell = 4; this.ox = 4; this.oy = 10;
-          this.body = [{ x: 5, y: 5 }, { x: 4, y: 5 }, { x: 3, y: 5 }];
+          this.cols = 22; this.rows = 14; this.cell = 4; this.ox = 4; this.oy = 11;
+          this.body = [{ x: 5, y: 7 }, { x: 4, y: 7 }, { x: 3, y: 7 }];
           this.dir = { x: 1, y: 0 }; this.next = this.dir; this.score = 0; this.t = 0; this.dead = false; this.place();
         },
         place() {
@@ -346,17 +346,22 @@
       const btn = el.dataset.btn;
       let wait = 0;
       let loop = 0;
+      let viaPointer = false;
       const stop = () => { clearTimeout(wait); clearInterval(loop); el.classList.remove("held"); };
       el.addEventListener("pointerdown", (e) => {
         if (e.button > 0) return;
         e.preventDefault();
+        viaPointer = true;
         el.classList.add("held");
         press(btn);
         if (REPEAT.has(btn)) wait = setTimeout(() => { loop = setInterval(() => press(btn), 75); }, 260);
       });
       ["pointerup", "pointerleave", "pointercancel"].forEach((type) => el.addEventListener(type, stop));
-      // Teclado (Enter/Espaço) gera clique sem ponteiro.
-      el.addEventListener("click", (e) => { if (e.detail === 0) press(btn); });
+      // O clique que vem depois de um toque já foi contado; só o do teclado (Enter/Espaço) aciona aqui.
+      el.addEventListener("click", () => {
+        if (viaPointer) { viaPointer = false; return; }
+        press(btn);
+      });
       el.addEventListener("contextmenu", (e) => e.preventDefault());
     });
     tilesEl.addEventListener("click", (e) => {
@@ -442,6 +447,18 @@
     const n = Math.round(v).toLocaleString("pt-BR");
     return s.format === "usd" ? `US$ ${n}` : s.format === "pct" ? `${n}%` : n;
   }
+  /* Chips de ferramentas: ícone colorido + nome. */
+  const TOOL_BY_LABEL = Object.fromEntries(Object.entries(D.tools).map(([k, t]) => [t.label.toLowerCase(), k]));
+  function toolChip(key) {
+    const t = D.tools[key];
+    if (!t) return "";
+    return `<li class="chip" style="--c:${t.color}">${icon(t.icon)}<span>${esc(t.label)}</span></li>`;
+  }
+  function stackChip(name) {
+    const key = TOOL_BY_LABEL[name.toLowerCase()];
+    return key ? toolChip(key) : `<li class="chip chip--plain"><span>${esc(name)}</span></li>`;
+  }
+
   let workTab = D.projectTabs[0].id;
   function renderWorks(animate = false) {
     $("[data-work-tabs]").innerHTML = D.projectTabs.map((tab) => {
@@ -454,8 +471,8 @@
       let preview;
       if (p.cover && p.cover.logo) {
         preview = `<div class="work-logo" style="background:${p.cover.bg};--pad:${p.cover.pad || 0};--fit:${p.cover.fit || "contain"}"><img src="${p.cover.logo}" alt="${esc(p.cover.alt)}" loading="lazy" decoding="async"></div>`;
-      } else if (p.stats) {
-        preview = `<div class="work-stats" style="--tint:${p.tint || "#eef6f1"}">${p.stats.map((s) => `<div class="stat"><span class="stat-value" data-stat="${s.value}" data-format="${s.format}">${formatStat(s, s.value)}</span><span class="stat-label">${esc(s.label)}</span></div>`).join("")}</div>`;
+      } else if (p.cover && p.cover.icon) {
+        preview = `<div class="work-mark" style="background:${p.cover.bg};--c:${p.cover.color}">${icon(p.cover.icon)}<span>${esc(p.cover.label)}</span></div>`;
       } else {
         preview = `<img src="${p.cover.src}" alt="" loading="lazy" decoding="async" style="object-position:${p.cover.position || "50% 50%"}">`;
       }
@@ -465,9 +482,10 @@
           <div class="work-meta">
             <div class="work-meta-row">
               <span class="work-company">${esc(p.company)}</span>
-              <span class="badge">${p.badge.live ? '<span class="badge-dot" aria-hidden="true"></span>' : ""}${esc(p.badge.text)}</span>
+              ${p.status ? `<span class="status">${icon("check-circle-fill")}${esc(p.status)}</span>` : ""}
             </div>
             <h2 class="work-title">${esc(p.title)}</h2>
+            <ul class="chips" aria-label="Ferramentas">${(p.tools || []).map(toolChip).join("")}</ul>
           </div>
         </a>`;
     }).join("");
@@ -567,7 +585,7 @@
           <p class="case-company">${esc(p.company)}</p>
           <h1 class="case-title" id="case-title" tabindex="-1">${esc(p.title)}</h1>
           <p class="case-tagline">${esc(p.tagline)}</p>
-          <ul class="case-tags" aria-label="Ferramentas">${p.stack.map((t) => `<li>${esc(t)}</li>`).join("")}</ul>
+          <ul class="chips case-chips" aria-label="Ferramentas">${p.stack.map(stackChip).join("")}</ul>
           ${first ? renderMedia(first) : ""}
           <div class="case-secs">${p.sections.map((s) => `<section class="case-sec"><h2>${esc(s.heading)}</h2><p>${esc(s.body)}</p></section>`).join("")}</div>
           ${rest.map(renderMedia).join("")}

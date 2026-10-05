@@ -30,15 +30,31 @@ window.SITE = {
     { id: "pessoal", label: "Pessoal" }
   ],
 
+  // Ferramentas que aparecem como chips nos cartões e nas janelas dos projetos.
+  // "icon" é um logo do Simple Icons ou um ícone do Phosphor (ver icons.js).
+  tools: {
+    python: { label: "Python", icon: "python", color: "#3776AB" },
+    pandas: { label: "pandas", icon: "pandas", color: "#150458" },
+    matplotlib: { label: "Matplotlib", icon: "chart-line-up-fill", color: "#11557C" },
+    postgresql: { label: "PostgreSQL", icon: "postgresql", color: "#4169E1" },
+    supabase: { label: "Supabase", icon: "supabase", color: "#3ECF8E" },
+    databricks: { label: "Databricks", icon: "databricks", color: "#FF3621" },
+    pyspark: { label: "PySpark", icon: "apachespark", color: "#E25A1C" },
+    sql: { label: "SQL", icon: "database-fill", color: "#5B6B7F" },
+    powerbi: { label: "Power BI", icon: "chart-bar-fill", color: "#D9A300" },
+    githubactions: { label: "GitHub Actions", icon: "githubactions", color: "#2088FF" }
+  },
+
   projects: [
     {
       id: "cairo-special-bikes",
       company: "Cairo Special Bikes",
-      badge: { text: "Em produção", live: true },
+      status: "Entregue",
       title: "Da planilha ao painel",
       file: "cairo-special-bikes.md",
       category: "profissional",
-      cover: { logo: "assets/img/logo-cairo.webp", alt: "Logo da Cairo Special Bikes", bg: "radial-gradient(70% 95% at 50% 118%, #623c2e 0%, #141416 64%)", pad: "0", fit: "cover" },
+      tools: ["python", "supabase", "powerbi"],
+      cover: { logo: "assets/img/logo-cairo.webp", alt: "Logo da Cairo Special Bikes", bg: "#141416", pad: "17% 22%", fit: "contain" },
       tagline: "Plataforma de dados para uma loja de bicicletas consignadas, do app de campo ao dashboard.",
       stack: ["Python", "pandas", "PostgreSQL", "Supabase", "GitHub Actions", "Apps Script", "Power BI"],
       url: "https://github.com/pedrinvazzz-code/Cairo-Special-Bikes",
@@ -63,11 +79,12 @@ window.SITE = {
     {
       id: "nettrac-nfse-etl",
       company: "NetTRAC Rastreadores",
-      badge: { text: "Em uso", live: true },
+      status: "Entregue",
       title: "Notas fiscais que viram análise",
       file: "nettrac-nfse-etl.md",
       category: "profissional",
-      cover: { logo: "assets/img/logo-nettrac.webp", alt: "Logo da NetTRAC Rastreadores", bg: "#ffffff", pad: "0 2%", fit: "contain" },
+      tools: ["python", "postgresql", "powerbi"],
+      cover: { logo: "assets/img/logo-nettrac.webp", alt: "Logo da NetTRAC Rastreadores", bg: "#ffffff", pad: "6% 14%", fit: "contain" },
       tagline: "Pipeline que transforma notas fiscais de serviço em análise financeira para uma empresa de rastreamento veicular.",
       stack: ["Python", "lxml", "PyMuPDF", "watchdog", "PostgreSQL", "Supabase", "Power BI"],
       url: "https://github.com/pedrinvazzz-code/NetTRAC-NFSe-ETL",
@@ -84,17 +101,12 @@ window.SITE = {
     {
       id: "voebem-analytics",
       company: "Dados abertos da ANAC",
-      badge: { text: "Databricks" },
       title: "Um milhão de voos",
       file: "voebem-analytics.md",
       category: "pessoal",
-      // Sem logo de empresa: o cartão mostra os números do projeto.
-      tint: "#eef3fa",
-      stats: [
-        { value: 1.01, label: "milhão de voos", format: "dec" },
-        { value: 12, label: "regras de qualidade", format: "int" },
-        { value: 41, label: "duplicatas removidas", format: "int" }
-      ],
+      tools: ["databricks", "pyspark", "sql"],
+      // O principal aprendizado do projeto foi o Databricks, então ele vai na capa.
+      cover: { icon: "databricks", label: "Databricks", color: "#FF3621", bg: "radial-gradient(80% 100% at 50% 0%, #ffffff, #fdeeea 75%)" },
       tagline: "Mais de 1 milhão de voos da ANAC em arquitetura medalhão, com um agente que responde em português.",
       stack: ["Databricks", "PySpark", "SQL", "Delta Lake", "Unity Catalog", "Genie"],
       url: "https://github.com/pedrinvazzz-code/-voebem-analytics-anac",
@@ -110,27 +122,25 @@ window.SITE = {
       ]
     },
     {
-      id: "segmentacao-clientes",
-      company: "Estudo de marketing",
-      badge: { text: "Power BI" },
-      title: "Quem compra, e por quê",
-      file: "segmentacao-clientes.md",
+      id: "dominando-pandas",
+      company: "Estudo autodirigido",
+      title: "Uma análise por dia",
+      file: "dominando-pandas.md",
       category: "pessoal",
-      // Sem logo de empresa: o cartão mostra os números do estudo.
-      tint: "#eef6f1",
-      stats: [
-        { value: 2000, label: "clientes", format: "int" },
-        { value: 602, label: "gasto médio", format: "usd" },
-        { value: 16, label: "conversão", format: "pct" }
+      tools: ["python", "pandas", "matplotlib"],
+      cover: { icon: "pandas", label: "pandas", color: "#150458", bg: "radial-gradient(80% 100% at 50% 0%, #ffffff, #efedf8 75%)" },
+      tagline: "Uma análise de dados por dia com Python e pandas, cada uma com um dataset e perguntas de negócio, aumentando a dificuldade aos poucos.",
+      stack: ["Python", "pandas", "Matplotlib"],
+      url: "https://github.com/pedrinvazzz-code/Dominando-Pandas",
+      media: [
+        { type: "image", src: "assets/img/roas.webp", width: 1000, height: 600, alt: "Gráfico de barras do ROAS por canal de marketing, com Email Marketing muito à frente.", caption: "Dia 8: ROAS por canal, a partir de 1.200 registros de campanhas." },
+        { type: "image", src: "assets/img/pandas-faturamento.webp", width: 1000, height: 600, alt: "Gráfico de barras do faturamento total por categoria: Acessórios, Informática e Áudio.", caption: "Dia 5: faturamento por categoria, depois do merge de produtos e vendas." }
       ],
-      tagline: "Dashboard que analisa 2.000 clientes para entender por que as campanhas de marketing convertiam pouco.",
-      stack: ["Power BI", "DAX", "Modelagem de dados"],
-      url: "https://github.com/pedrinvazzz-code/Segmenta-o-Clientes-Marketing-Powerbi",
-      media: [],
       sections: [
-        { heading: "O problema", body: "Campanhas com baixa conversão por causa de uma segmentação fraca, sem clareza sobre quem eram os clientes de maior valor." },
-        { heading: "O que os dados mostraram", body: "US$ 1 milhão em receita, gasto médio de US$ 602 por cliente e 16% de conversão nas campanhas. Renda e gasto andam juntos, e clientes sem filhos compram mais." },
-        { heading: "Para que serve", body: "Estado civil e escolaridade pesam no comportamento de compra, o que permite campanhas mais direcionadas para cada perfil." }
+        { heading: "A ideia", body: "Cada dia tem uma pasta com um dataset e um script que responde perguntas de negócio sobre ele. A dificuldade aumenta aos poucos, de Series e DataFrames até merge, limpeza e ETL." },
+        { heading: "Limpeza de dados", body: "O dia 6 é o mais importante: datasets gerados com valores faltantes, duplicatas, datas em formatos misturados e texto inconsistente. O script diagnostica cada problema, trata e valida o resultado antes de analisar." },
+        { heading: "Perguntas de negócio", body: "Um e-commerce com 3.000 pedidos e 28 colunas rende KPIs de faturamento, margem, cancelamento e entrega. Já os 1.200 registros de campanhas trazem ROAS, CTR e CPC, num arquivo em latin-1 que quebra o read_csv padrão." },
+        { heading: "Do script ao pipeline", body: "No último dia, um ETL completo: extração, transformação e carga dos dados limpos, com logging em todo o código." }
       ]
     }
   ],
