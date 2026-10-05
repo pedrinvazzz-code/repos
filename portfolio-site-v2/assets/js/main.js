@@ -47,167 +47,375 @@
     $("[data-icon-lab]").innerHTML = icon("table-fill");
   }
 
-  /* ---------- Console: mini pipeline na tela ---------- */
+  /* ---------- Console: menu de jogos ---------- */
   const toy = { active: true };
   function initToy() {
     const canvas = $("[data-screen]");
     const ctx = canvas.getContext("2d");
-    const rowsEl = $("[data-rows]");
+    const W = 96, H = 54;
     const css = getComputedStyle(document.documentElement);
-    const C = Object.fromEntries(["bg", "dot", "bar", "bar-top", "block", "ground", "floor", "duck", "beak"]
+    const C = Object.fromEntries(["bg", "dot", "bar", "bar-top", "block", "ground", "floor", "duck", "beak", "bad", "sel"]
       .map((k) => [k, css.getPropertyValue(`--scr-${k}`).trim()]));
-    const W = 96, H = 54, GROUND = 47, TOP = 12, BAR_W = 10, GAP = 6;
-    const X0 = Math.round((W - (5 * BAR_W + 4 * GAP)) / 2);
-    const MAX_H = GROUND - TOP - 3;
-    const BASE = [5, 9, 10, 14, 4];
+    const menuEl = $("[data-menu]");
+    const tilesEl = $("[data-tiles]");
+    const hudEl = $("[data-hud]");
+    const cardEl = $("[data-card]");
+    const glyph = (l) => `<span class="btn-glyph" aria-hidden="true">${l}</span>`;
 
-    let bars = BASE.slice();
-    let rows = bars.reduce((a, b) => a + b, 0);
-    let blocks = [];
-    let sparks = [];
-    let flash = 0;
-    const duck = { x: 6, dir: 1, step: 0, y: 0, vy: 0, dash: 0 };
+    const rand = (a, b) => a + Math.random() * (b - a);
+    const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+    const overlap = (a, b) => a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
+    const px = (g, x, y, w, h, c) => { g.fillStyle = c; g.fillRect(Math.round(x), Math.round(y), w, h); };
+    const sprite = (g, art, x, y, colors, flip = false) => art.forEach((row, ry) => [...row].forEach((ch, rx) => {
+      if (ch === ".") return;
+      px(g, x + (flip ? row.length - 1 - rx : rx), y + ry, 1, 1, colors[ch]);
+    }));
     const DUCK = ["...XX.", "..XoXb", "XXXXX.", ".XXXX."];
     const LEGS = ["..X.X.", ".X..X."];
+    const BUG = ["X....X", ".XXXX.", "XXooXX", ".XXXX.", "X.XX.X"];
+    const duckColors = (bg) => ({ X: C.duck, o: bg, b: C.beak });
+    const drawDuck = (g, x, y, step = 0, flip = false, bg = C.bg) =>
+      sprite(g, [...DUCK, LEGS[Math.floor(step) % 2]], x, y, duckColors(bg), flip);
+    const drawBug = (g, x, y) => sprite(g, BUG, x, y, { X: C.bad, o: C.bg });
+    const backdrop = (g, w, h, dotsY = 9) => { px(g, 0, 0, w, h, C.bg); for (let x = 1; x < w; x += 3) px(g, x, dotsY, 1, 1, C.dot); };
+    const floor = (g, y, w = W, h = H) => {
+      px(g, 0, y, w, 1, C.ground);
+      for (let x = 0; x < w; x++) for (let yy = y + 1; yy < h; yy++) if ((x + yy) % 2 === 0) px(g, x, yy, 1, 1, C.floor);
+    };
+    const tableSprite = (g, x, y, w, h) => {
+      px(g, x, y, w, h, C.block);
+      px(g, x, y, w, 2, C.bar);
+      for (let cx = x + 6; cx < x + w - 1; cx += 6) px(g, cx, y + 2, 1, h - 2, C.dot);
+    };
+    const rowSprite = (g, x, y, bad) => {
+      px(g, x, y, 8, 3, bad ? C.bad : C.bar);
+      if (bad) { px(g, x + 2, y + 1, 1, 1, C.bg); px(g, x + 5, y + 1, 1, 1, C.bg); }
+      else px(g, x, y, 8, 1, C["bar-top"]);
+    };
 
-    const px = (x, y, w, h, c) => { ctx.fillStyle = c; ctx.fillRect(Math.round(x), Math.round(y), w, h); };
-    const barX = (i) => X0 + i * (BAR_W + GAP);
+    /* Os jogos. Cada um sabe se reiniciar, avançar um passo, desenhar e reagir a botões e toques. */
+    const GAMES = [
+      {
+        id: "limpeza", name: "Limpeza de dados", how: "Pegue as linhas verdes com a tabela e desvie das vermelhas.",
+        reset() { this.p = { x: W / 2 - 9, y: 46, w: 18, h: 5 }; this.items = []; this.t = 0; this.score = 0; this.life = 3; this.hurt = 0; this.target = null; this.dead = false; },
+        step() {
+          this.t++;
+          const every = Math.max(14, 36 - Math.floor(this.score / 2));
+          if (this.t % every === 0) {
+            const bad = Math.random() < Math.min(0.5, 0.28 + this.score / 90);
+            this.items.push({ x: rand(2, W - 10), y: 8, w: 8, h: 3, bad, vy: 0.42 + Math.random() * 0.22 + this.score * 0.008 });
+          }
+          if (this.target !== null) this.p.x += clamp(this.target - (this.p.x + this.p.w / 2), -2.2, 2.2);
+          this.p.x = clamp(this.p.x, 1, W - this.p.w - 1);
+          for (const it of this.items) {
+            it.y += it.vy;
+            if (overlap(it, this.p)) {
+              it.gone = true;
+              if (it.bad) { this.life--; this.hurt = 8; if (this.life <= 0) this.dead = true; } else this.score++;
+            } else if (it.y > H) it.gone = true;
+          }
+          this.items = this.items.filter((it) => !it.gone);
+          if (this.hurt) this.hurt--;
+        },
+        draw(g) {
+          backdrop(g, W, H);
+          if (this.hurt % 4 > 1) px(g, 0, 0, W, H, C.bad);
+          this.items.forEach((it) => rowSprite(g, it.x, it.y, it.bad));
+          floor(g, 52);
+          tableSprite(g, this.p.x, this.p.y, this.p.w, this.p.h);
+        },
+        hud() { return `${"♥".repeat(this.life)}${"♡".repeat(3 - this.life)} ${this.score} linhas`; },
+        input(b) { if (b === "left") { this.p.x -= 9; this.target = null; } if (b === "right") { this.p.x += 9; this.target = null; } },
+        pointer(type, x) { if (type !== "up") this.target = x; }
+      },
+      {
+        id: "pato", name: "Pato debugger", how: "Toque ou aperte A para o pato voar entre as barras do gráfico.",
+        reset() { this.d = { x: 20, y: 24, vy: 0, w: 6, h: 5 }; this.bars = []; this.t = 0; this.score = 0; this.dead = false; },
+        step() {
+          const d = this.d;
+          this.t++;
+          d.vy = Math.min(d.vy + 0.11, 1.8);
+          d.y += d.vy;
+          if (this.t % 62 === 1) this.bars.push({ x: W, w: 8, gap: rand(20, 37), size: 23, passed: false });
+          for (const b of this.bars) {
+            b.x -= 0.75 + this.score * 0.012;
+            if (!b.passed && b.x + b.w < d.x) { b.passed = true; this.score++; }
+            const top = { x: b.x, y: 0, w: b.w, h: b.gap - b.size / 2 };
+            const bottom = { x: b.x, y: b.gap + b.size / 2, w: b.w, h: 50 - (b.gap + b.size / 2) };
+            if (overlap({ x: d.x + 1, y: d.y + 1, w: 4, h: 3 }, top) || overlap({ x: d.x + 1, y: d.y + 1, w: 4, h: 3 }, bottom)) this.dead = true;
+          }
+          this.bars = this.bars.filter((b) => b.x + b.w > -2);
+          if (d.y < 0) { d.y = 0; d.vy = 0; }
+          if (d.y + d.h >= 50) this.dead = true;
+        },
+        draw(g) {
+          backdrop(g, W, H, 60);
+          for (const b of this.bars) {
+            const topH = b.gap - b.size / 2;
+            const y2 = b.gap + b.size / 2;
+            px(g, b.x, 0, b.w, topH, C.bar);
+            px(g, b.x, topH - 1, b.w, 1, C["bar-top"]);
+            px(g, b.x, y2, b.w, 50 - y2, C.bar);
+            px(g, b.x, y2, b.w, 1, C["bar-top"]);
+          }
+          floor(g, 50);
+          drawDuck(g, this.d.x, this.d.y, this.d.vy < 0 ? 1 : 0);
+        },
+        hud() { return `${this.score} barras`; },
+        input(b) { if (["a", "up", "x", "plus"].includes(b)) this.d.vy = -1.45; },
+        pointer(type) { if (type === "down") this.d.vy = -1.45; }
+      },
+      {
+        id: "deploy", name: "Deploy em produção", how: "Pule os bugs com A ou um toque. A velocidade aumenta com o tempo.",
+        reset() {
+          this.d = { x: 12, y: 0, vy: 0, w: 6, h: 5 }; this.obs = []; this.t = 0; this.score = 0; this.speed = 0.95; this.next = 50; this.dead = false;
+          this.line = Array.from({ length: 30 }, () => rand(16, 34));
+        },
+        step() {
+          this.t++;
+          this.speed = 0.95 + this.t / 2200;
+          this.score = Math.floor(this.t / 5);
+          const d = this.d;
+          if (d.y < 0 || d.vy) { d.vy += 0.17; d.y += d.vy; if (d.y >= 0) { d.y = 0; d.vy = 0; } }
+          if (--this.next <= 0) {
+            const tall = Math.random() < 0.28;
+            this.obs.push({ x: W, w: 6, h: tall ? 10 : 5 });
+            this.next = Math.round(rand(50, 100) / (this.speed / 0.95));
+          }
+          const box = { x: d.x + 1, y: 42 + d.y, w: 4, h: 5 };
+          for (const o of this.obs) {
+            o.x -= this.speed;
+            if (overlap(box, { x: o.x + 1, y: 47 - o.h, w: o.w - 2, h: o.h })) this.dead = true;
+          }
+          this.obs = this.obs.filter((o) => o.x > -8);
+        },
+        draw(g) {
+          backdrop(g, W, H, 60);
+          const travel = this.t * this.speed * 0.3;
+          const off = travel % 6;
+          const shift = Math.floor(travel / 6);
+          for (let i = 0; i < 18; i++) {
+            const a = this.line[(i + shift) % 30];
+            const b = this.line[(i + shift + 1) % 30];
+            for (let k = 0; k < 6; k++) px(g, i * 6 + k - off, a + ((b - a) * k) / 6, 1, 1, C.dot);
+          }
+          floor(g, 47);
+          for (const o of this.obs) {
+            drawBug(g, o.x, 47 - 5);
+            if (o.h > 5) drawBug(g, o.x, 47 - 10);
+          }
+          drawDuck(g, this.d.x, 42 + this.d.y, this.t / 4);
+        },
+        hud() { return `v1.${this.score} no ar`; },
+        input(b) { if (["a", "up", "x", "plus"].includes(b) && this.d.y === 0) this.d.vy = -2.25; },
+        pointer(type) { if (type === "down" && this.d.y === 0) this.d.vy = -2.25; }
+      },
+      {
+        id: "snake", name: "Snake do pipeline", how: "Guie o pipeline até as linhas de dados. Não bata nas bordas nem nele mesmo.",
+        reset() {
+          this.cols = 22; this.rows = 10; this.cell = 4; this.ox = 4; this.oy = 10;
+          this.body = [{ x: 5, y: 5 }, { x: 4, y: 5 }, { x: 3, y: 5 }];
+          this.dir = { x: 1, y: 0 }; this.next = this.dir; this.score = 0; this.t = 0; this.dead = false; this.place();
+        },
+        place() {
+          do { this.food = { x: Math.floor(rand(0, this.cols)), y: Math.floor(rand(0, this.rows)) }; }
+          while (this.body.some((p) => p.x === this.food.x && p.y === this.food.y));
+        },
+        turn(dx, dy) { if (dx !== -this.dir.x || dy !== -this.dir.y) this.next = { x: dx, y: dy }; },
+        step() {
+          this.t++;
+          if (this.t % Math.max(3, 6 - Math.floor(this.score / 6)) !== 0) return;
+          this.dir = this.next;
+          const head = { x: this.body[0].x + this.dir.x, y: this.body[0].y + this.dir.y };
+          const out = head.x < 0 || head.y < 0 || head.x >= this.cols || head.y >= this.rows;
+          if (out || this.body.some((p) => p.x === head.x && p.y === head.y)) { this.dead = true; return; }
+          this.body.unshift(head);
+          if (head.x === this.food.x && head.y === this.food.y) { this.score++; this.place(); } else this.body.pop();
+        },
+        draw(g) {
+          px(g, 0, 0, W, H, C.bg);
+          const { cell, ox, oy } = this;
+          px(g, ox - 1, oy - 1, this.cols * cell + 2, 1, C.ground);
+          px(g, ox - 1, oy + this.rows * cell, this.cols * cell + 2, 1, C.ground);
+          px(g, ox - 1, oy - 1, 1, this.rows * cell + 2, C.ground);
+          px(g, ox + this.cols * cell, oy - 1, 1, this.rows * cell + 2, C.ground);
+          px(g, ox + this.food.x * cell, oy + this.food.y * cell, cell - 1, cell - 1, C.block);
+          this.body.forEach((p, i) => px(g, ox + p.x * cell, oy + p.y * cell, cell - 1, cell - 1, i === 0 ? C["bar-top"] : C.bar));
+        },
+        hud() { return `${this.score} linhas`; },
+        input(b) {
+          if (b === "up") this.turn(0, -1);
+          if (b === "down") this.turn(0, 1);
+          if (b === "left") this.turn(-1, 0);
+          if (b === "right") this.turn(1, 0);
+        },
+        pointer(type, x, y, dx, dy) {
+          if (type !== "up") return;
+          let vx = dx, vy = dy;
+          if (Math.hypot(dx, dy) < 4) {
+            const h = this.body[0];
+            vx = x - (this.ox + h.x * this.cell + 2);
+            vy = y - (this.oy + h.y * this.cell + 2);
+          }
+          if (Math.abs(vx) > Math.abs(vy)) this.turn(Math.sign(vx), 0); else this.turn(0, Math.sign(vy) || 1);
+        }
+      }
+    ];
 
-    function spawn(bar, x) {
-      const b = bar ?? Math.floor(Math.random() * 5);
-      const bx = x ?? barX(b) + 1 + Math.floor(Math.random() * (BAR_W - 3));
-      blocks.push({ bar: b, x: Math.min(Math.max(bx, barX(b)), barX(b) + BAR_W - 2), y: TOP - 2, vy: 0.2 });
+    /* Ícones dos jogos no menu, desenhados com os mesmos sprites. */
+    const ICONS_ART = {
+      limpeza(g) { backdrop(g, 32, 32, 40); rowSprite(g, 4, 5, false); rowSprite(g, 19, 10, true); rowSprite(g, 11, 15, false); tableSprite(g, 7, 23, 18, 5); },
+      pato(g) { backdrop(g, 32, 32, 40); px(g, 21, 0, 7, 9, C.bar); px(g, 21, 8, 7, 1, C["bar-top"]); px(g, 21, 21, 7, 11, C.bar); px(g, 21, 21, 7, 1, C["bar-top"]); drawDuck(g, 8, 13, 1); },
+      deploy(g) { backdrop(g, 32, 32, 40); floor(g, 25, 32, 32); drawBug(g, 21, 20); drawDuck(g, 6, 13, 0); },
+      snake(g) { px(g, 0, 0, 32, 32, C.bg); [[6, 18], [10, 18], [14, 18], [14, 14], [18, 14]].forEach(([x, y], i, a) => px(g, x, y, 3, 3, i === a.length - 1 ? C["bar-top"] : C.bar)); px(g, 24, 8, 3, 3, C.block); }
+    };
+    tilesEl.innerHTML = GAMES.map((g, i) => `<button class="scr-tile" type="button" data-tile="${i}" aria-label="${esc(g.name)}"><canvas width="32" height="32"></canvas></button>`).join("");
+    $$("[data-tile]", tilesEl).forEach((t, i) => ICONS_ART[GAMES[i].id](t.querySelector("canvas").getContext("2d")));
+
+    const records = store.get("pedro-recordes") || {};
+    let state = "menu";
+    let sel = 0;
+    let game = null;
+
+    function selectTile(i) {
+      sel = (i + GAMES.length) % GAMES.length;
+      $$("[data-tile]", tilesEl).forEach((t, k) => t.classList.toggle("sel", k === sel));
+      $("[data-menu-name]").textContent = GAMES[sel].name;
+      const best = records[GAMES[sel].id];
+      $("[data-menu-best]").textContent = best ? `recorde ${best}` : "";
     }
-    function land(bar, x, y) {
-      bars[bar]++;
-      rows++;
-      sparks.push({ x, y, t: 8 });
-      if (bars[bar] > MAX_H) {
-        bars = bars.map((h) => Math.max(2, Math.ceil(h / 2)));
-        flash = 6;
-      }
+    function card(title, text, hint) {
+      $("[data-card-title]").textContent = title;
+      $("[data-card-text]").textContent = text;
+      $("[data-card-hint]").innerHTML = hint;
+      cardEl.hidden = false;
     }
-    function update() {
-      for (const b of blocks) {
-        b.vy = Math.min(b.vy + 0.06, 1.3);
-        b.y += b.vy;
-        const target = GROUND - bars[b.bar] - 2;
-        if (b.y >= target) { b.done = true; land(b.bar, b.x, target); }
-      }
-      blocks = blocks.filter((b) => !b.done);
-      sparks.forEach((sp) => sp.t--);
-      sparks = sparks.filter((sp) => sp.t > 0);
-      if (flash) flash--;
-      const speed = duck.dash > 0 ? 0.7 : 0.16;
-      if (duck.dash > 0) duck.dash--;
-      duck.x += speed * duck.dir;
-      duck.step += duck.dash > 0 ? 0.25 : 0.08;
-      if (duck.x > W - 8) { duck.x = W - 8; duck.dir = -1; }
-      if (duck.x < 2) { duck.x = 2; duck.dir = 1; }
-      if (duck.y < 0 || duck.vy) {
-        duck.vy += 0.12;
-        duck.y += duck.vy;
-        if (duck.y >= 0) { duck.y = 0; duck.vy = 0; }
-      }
+    function hud() {
+      $("[data-hud-name]").textContent = game.name;
+      $("[data-hud-score]").textContent = game.hud();
     }
-    function draw() {
-      const bg = flash ? C.bar : C.bg;
-      px(0, 0, W, H, bg);
-      for (let x = 1; x < W; x += 3) px(x, TOP - 4, 1, 1, C.dot);
-      bars.forEach((h, i) => {
-        px(barX(i), GROUND - h, BAR_W, h, flash ? C["bar-top"] : C.bar);
-        px(barX(i), GROUND - h, BAR_W, 1, C["bar-top"]);
-      });
-      for (const b of blocks) px(b.x, b.y, 2, 2, C.block);
-      for (const sp of sparks) {
-        const d = 9 - sp.t;
-        px(sp.x - d, sp.y - 1, 1, 1, C["bar-top"]);
-        px(sp.x + 1 + d, sp.y - 1, 1, 1, C["bar-top"]);
-        px(sp.x + 0.5, sp.y - 1 - d, 1, 1, C["bar-top"]);
-      }
-      px(0, GROUND, W, 1, C.ground);
-      for (let x = 0; x < W; x++) for (let y = GROUND + 1; y < H; y++) if ((x + y) % 2 === 0) px(x, y, 1, 1, C.floor);
-      const art = [...DUCK, LEGS[Math.floor(duck.step) % 2]];
-      const dx = Math.round(duck.x);
-      const dy = GROUND - art.length + Math.round(duck.y);
-      art.forEach((row, ry) => {
-        [...row].forEach((ch, rx) => {
-          if (ch === ".") return;
-          const col = duck.dir > 0 ? rx : row.length - 1 - rx;
-          px(dx + col, dy + ry, 1, 1, ch === "o" ? bg : ch === "b" ? C.beak : C.duck);
-        });
-      });
-      rowsEl.textContent = String(rows);
+    function showMenu() {
+      state = "menu";
+      game = null;
+      menuEl.hidden = false;
+      hudEl.hidden = true;
+      cardEl.hidden = true;
+      selectTile(sel);
     }
+    function open(i) {
+      selectTile(i);
+      game = GAMES[sel];
+      game.reset();
+      state = "ready";
+      menuEl.hidden = true;
+      hudEl.hidden = false;
+      hud();
+      card(game.name, game.how, `${glyph("A")} ou toque para começar`);
+      game.draw(ctx);
+    }
+    function begin() {
+      state = "play";
+      cardEl.hidden = true;
+      toy.start();
+    }
+    function finish() {
+      state = "over";
+      const prev = records[game.id] || 0;
+      if (game.score > prev) { records[game.id] = game.score; store.set("pedro-recordes", records); }
+      const best = Math.max(prev, game.score);
+      const recordText = game.score > prev && prev > 0 ? " · novo recorde!" : best > 0 ? ` · recorde ${best}` : "";
+      card("Fim de jogo", `${game.score} ${game.score === 1 ? "ponto" : "pontos"}${recordText}`, `${glyph("A")} de novo ${glyph("B")} menu`);
+    }
+
+    function press(b) {
+      if (state === "menu") {
+        if (b === "left" || b === "up" || b === "y") selectTile(sel - 1);
+        else if (b === "right" || b === "down" || b === "x") selectTile(sel + 1);
+        else if (b === "a" || b === "plus") open(sel);
+        return;
+      }
+      if (b === "home" || b === "b" || b === "minus") { showMenu(); return; }
+      if (state === "ready") { begin(); game.input(b); return; }
+      if (state === "over") { if (b === "a" || b === "plus") { game.reset(); hud(); begin(); } return; }
+      game.input(b);
+    }
+
+    $$("[data-btn]").forEach((el) => el.addEventListener("click", () => press(el.dataset.btn)));
+    tilesEl.addEventListener("click", (e) => {
+      const t = e.target.closest("[data-tile]");
+      if (t) open(Number(t.dataset.tile));
+    });
+    cardEl.addEventListener("click", () => press("a"));
+
+    // Toques e arrastos na tela viram comandos do jogo.
+    let down = null;
+    const toCanvas = (e) => {
+      const r = canvas.getBoundingClientRect();
+      return [((e.clientX - r.left) / r.width) * W, ((e.clientY - r.top) / r.height) * H];
+    };
+    canvas.addEventListener("pointerdown", (e) => {
+      if (!game) return;
+      e.preventDefault();
+      const [x, y] = toCanvas(e);
+      down = { x, y };
+      canvas.setPointerCapture(e.pointerId);
+      if (state === "ready") begin();
+      if (state === "over") { game.reset(); hud(); begin(); }
+      game.pointer("down", x, y, 0, 0);
+    });
+    canvas.addEventListener("pointermove", (e) => {
+      if (!game || !down || state !== "play") return;
+      const [x, y] = toCanvas(e);
+      game.pointer("move", x, y, x - down.x, y - down.y);
+    });
+    canvas.addEventListener("pointerup", (e) => {
+      if (!game || !down) return;
+      const [x, y] = toCanvas(e);
+      game.pointer("up", x, y, x - down.x, y - down.y);
+      down = null;
+    });
+
+    // Com o foco no console, o teclado também joga.
+    const KEYS = { ArrowLeft: "left", ArrowRight: "right", ArrowUp: "up", ArrowDown: "down", a: "a", b: "b", x: "x", y: "y", Enter: "a", " ": "a", Escape: "home", Backspace: "b" };
+    $("[data-console]").addEventListener("keydown", (e) => {
+      const key = KEYS[e.key.length === 1 ? e.key.toLowerCase() : e.key];
+      if (!key || e.metaKey || e.ctrlKey || e.altKey) return;
+      if ((e.key === "Enter" || e.key === " ") && e.target.closest("button")) return;
+      e.preventDefault();
+      press(key);
+    });
+
+    const clockEl = $("[data-scr-clock]");
+    const clockFmt = new Intl.DateTimeFormat("pt-BR", { hour: "2-digit", minute: "2-digit", timeZone: D.timeZone });
+    const tickClock = () => { clockEl.textContent = clockFmt.format(new Date()); };
+    tickClock();
+    setInterval(tickClock, 15000);
 
     let raf = 0;
     let last = 0;
     let acc = 0;
-    let trickle = 0;
     let visible = true;
     function frame(t) {
       raf = 0;
-      if (!toy.active || !visible || document.hidden) return;
+      if (state !== "play" || !toy.active || !visible || document.hidden) return;
       const dt = Math.min(100, t - (last || t));
       last = t;
       acc += dt;
-      trickle += dt;
-      if (trickle > 2800) { trickle = 0; spawn(); }
-      while (acc >= 1000 / 30) { update(); acc -= 1000 / 30; }
-      draw();
+      while (acc >= 1000 / 30 && state === "play") {
+        game.step();
+        acc -= 1000 / 30;
+        if (game.dead) finish();
+      }
+      game.draw(ctx);
+      hud();
       raf = requestAnimationFrame(frame);
     }
-    toy.start = () => {
-      if (reduceMotion) { draw(); return; }
-      if (!raf) { last = 0; raf = requestAnimationFrame(frame); }
-    };
-
-    const grow = (i, n) => { bars[i] = Math.min(MAX_H, bars[i] + n); rows += n; };
-    const actions = {
-      run() {
-        if (reduceMotion) { bars.forEach((_, i) => grow(i, 2)); draw(); return; }
-        for (let i = 0; i < 10; i++) setTimeout(() => spawn(i % 5), i * 70);
-        duck.vy = -1.1;
-      },
-      drop(bar, x) {
-        if (reduceMotion) { grow(bar ?? Math.floor(Math.random() * 5), 1); draw(); return; }
-        spawn(bar, x);
-      },
-      reset() {
-        bars = BASE.slice();
-        rows = bars.reduce((a, b) => a + b, 0);
-        blocks = [];
-        flash = reduceMotion ? 0 : 4;
-        draw();
-      },
-      hop() { if (!reduceMotion && duck.y === 0) duck.vy = -1.5; },
-      left() { duck.dir = -1; duck.dash = reduceMotion ? 0 : 18; if (reduceMotion) { duck.x = Math.max(2, duck.x - 8); draw(); } },
-      right() { duck.dir = 1; duck.dash = reduceMotion ? 0 : 18; if (reduceMotion) { duck.x = Math.min(W - 8, duck.x + 8); draw(); } }
-    };
-    $("[data-run]").addEventListener("click", () => actions.run());
-    $$("[data-key]").forEach((b) => b.addEventListener("click", () => actions[b.dataset.key]()));
-
-    // Tocar na tela derruba um bloco na barra mais próxima.
-    canvas.addEventListener("click", (e) => {
-      const r = canvas.getBoundingClientRect();
-      const x = ((e.clientX - r.left) / r.width) * W;
-      const bar = Math.max(0, Math.min(4, Math.round((x - X0 - BAR_W / 2) / (BAR_W + GAP))));
-      actions.drop(bar, Math.round(x) - 1);
-    });
-
-    // Com o foco no console, o teclado também joga.
-    const KEYS = { ArrowLeft: "left", ArrowRight: "right", ArrowUp: "hop", ArrowDown: "drop", a: "run", b: "reset", x: "hop", y: "drop" };
-    $("[data-console]").addEventListener("keydown", (e) => {
-      const action = KEYS[e.key.length === 1 ? e.key.toLowerCase() : e.key];
-      if (!action || e.metaKey || e.ctrlKey || e.altKey) return;
-      e.preventDefault();
-      actions[action]();
-    });
+    toy.start = () => { if (!raf && state === "play") { last = 0; acc = 0; raf = requestAnimationFrame(frame); } };
 
     new IntersectionObserver(([e]) => { visible = e.isIntersecting; if (visible) toy.start(); }).observe(canvas);
     document.addEventListener("visibilitychange", () => { if (!document.hidden) toy.start(); });
-    draw();
-    toy.start();
+    px(ctx, 0, 0, W, H, C.bg);
+    showMenu();
   }
 
   /* ---------- Projetos ---------- */

@@ -65,35 +65,51 @@
           <div class="toy-float">
             <div class="console" data-console>
               <div class="joycon joycon--left" role="group" aria-label="Controle esquerdo">
-                <button class="jc-btn jc-minus" type="button" data-key="reset" aria-label="Menos: limpar o gráfico"></button>
+                <button class="jc-btn jc-minus" type="button" data-btn="minus" aria-label="Botão menos: voltar ao menu"></button>
                 <span class="jc-stick jc-stick--left" aria-hidden="true"></span>
                 <div class="jc-pad">
-                  <button class="jc-round jc-n" type="button" data-key="hop" aria-label="Cima: o pato pula"></button>
-                  <button class="jc-round jc-w" type="button" data-key="left" aria-label="Esquerda: o pato anda para a esquerda"></button>
-                  <button class="jc-round jc-e" type="button" data-key="right" aria-label="Direita: o pato anda para a direita"></button>
-                  <button class="jc-round jc-s" type="button" data-key="drop" aria-label="Baixo: cai um bloco de dados"></button>
+                  <button class="jc-round jc-n" type="button" data-btn="up" aria-label="Direcional para cima"></button>
+                  <button class="jc-round jc-w" type="button" data-btn="left" aria-label="Direcional para a esquerda"></button>
+                  <button class="jc-round jc-e" type="button" data-btn="right" aria-label="Direcional para a direita"></button>
+                  <button class="jc-round jc-s" type="button" data-btn="down" aria-label="Direcional para baixo"></button>
                 </div>
                 <span class="jc-capture" aria-hidden="true"></span>
               </div>
 
               <div class="console-body">
-                <div class="console-screen">
-                  <canvas width="96" height="54" data-screen role="img" aria-label="Mini jogo na tela: blocos de dados caem e fazem as barras do gráfico crescerem."></canvas>
-                  <div class="screen-hud"><span data-rows>0</span> linhas</div>
-                  <button class="screen-btn" type="button" data-run><span class="btn-glyph" aria-hidden="true">A</span>rodar etl</button>
+                <div class="console-screen" data-screen-wrap>
+                  <canvas width="96" height="54" data-screen aria-hidden="true"></canvas>
+                  <div class="scr-menu" data-menu>
+                    <div class="scr-top">
+                      <span class="scr-user"><img src="assets/img/avatar.webp" alt="" width="40" height="40"></span>
+                      <span class="scr-clock" data-scr-clock>--:--</span>
+                    </div>
+                    <p class="scr-name" data-menu-name></p>
+                    <div class="scr-tiles" role="group" aria-label="Escolha um jogo" data-tiles></div>
+                    <p class="scr-hint"><span class="btn-glyph" aria-hidden="true">A</span>jogar<span class="scr-best" data-menu-best></span></p>
+                  </div>
+                  <div class="scr-hud" data-hud hidden>
+                    <span data-hud-name></span>
+                    <span data-hud-score></span>
+                  </div>
+                  <div class="scr-card" data-card hidden aria-live="polite">
+                    <p class="scr-card-title" data-card-title></p>
+                    <p class="scr-card-text" data-card-text></p>
+                    <p class="scr-card-hint" data-card-hint></p>
+                  </div>
                 </div>
               </div>
 
               <div class="joycon joycon--right" role="group" aria-label="Controle direito">
-                <button class="jc-btn jc-plus" type="button" data-key="run" aria-label="Mais: rodar ETL"></button>
+                <button class="jc-btn jc-plus" type="button" data-btn="plus" aria-label="Botão mais: jogar"></button>
                 <div class="jc-pad">
-                  <button class="jc-round jc-n" type="button" data-key="hop" aria-label="X: o pato pula"><span aria-hidden="true">X</span></button>
-                  <button class="jc-round jc-w" type="button" data-key="drop" aria-label="Y: cai um bloco de dados"><span aria-hidden="true">Y</span></button>
-                  <button class="jc-round jc-e" type="button" data-key="run" aria-label="A: rodar ETL"><span aria-hidden="true">A</span></button>
-                  <button class="jc-round jc-s" type="button" data-key="reset" aria-label="B: limpar o gráfico"><span aria-hidden="true">B</span></button>
+                  <button class="jc-round jc-n" type="button" data-btn="x" aria-label="Botão X"><span aria-hidden="true">X</span></button>
+                  <button class="jc-round jc-w" type="button" data-btn="y" aria-label="Botão Y"><span aria-hidden="true">Y</span></button>
+                  <button class="jc-round jc-e" type="button" data-btn="a" aria-label="Botão A: jogar ou pular"><span aria-hidden="true">A</span></button>
+                  <button class="jc-round jc-s" type="button" data-btn="b" aria-label="Botão B: voltar ao menu"><span aria-hidden="true">B</span></button>
                 </div>
                 <span class="jc-stick jc-stick--right" aria-hidden="true"></span>
-                <button class="jc-home" type="button" data-key="reset" aria-label="Início: recomeçar o jogo"></button>
+                <button class="jc-home" type="button" data-btn="home" aria-label="Início: voltar ao menu de jogos"></button>
               </div>
             </div>
           </div>

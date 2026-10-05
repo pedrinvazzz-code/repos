@@ -37,6 +37,10 @@
   --scr-floor: #1c2027;
   --scr-duck: #f6c744;
   --scr-beak: #f08c2a;
+  --scr-bad: #ff5f57;
+  --scr-sel: #19b8dc;
+  --scr-panel: #22262d;
+  --scr-text: #eef4ff;
 
   --sans: "DM Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
   --mono: "DM Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
@@ -227,20 +231,54 @@ p { text-wrap: pretty; }
 }
 .console-screen canvas { display: block; width: 100%; height: 100%; image-rendering: pixelated; cursor: pointer; }
 .console-screen::after { content: ""; position: absolute; inset: 0; pointer-events: none; background: linear-gradient(155deg, rgb(255 255 255 / 0.1), rgb(255 255 255 / 0) 40%); }
-.screen-hud {
-  position: absolute; left: 4%; top: 5%; pointer-events: none;
-  font-family: var(--mono); font-weight: 500; font-size: 2.1cqw; letter-spacing: 0.06em; text-transform: uppercase;
-  color: rgb(238 244 255 / 0.85); font-variant-numeric: tabular-nums;
+.toy p { white-space: normal; }
+.btn-glyph {
+  display: inline-grid; place-items: center; width: 1.5em; aspect-ratio: 1; border-radius: 50%;
+  background: var(--scr-text); color: var(--scr-bg); font-family: var(--sans); font-weight: 600; font-size: 0.95em; line-height: 1;
 }
-.screen-btn {
-  position: absolute; right: 3.5%; top: 4%; display: inline-flex; align-items: center; gap: 0.45em; padding: 0.25em 0.7em 0.25em 0.3em; border-radius: 999px;
-  font-family: var(--mono); font-weight: 500; font-size: 2cqw; letter-spacing: 0.06em; text-transform: uppercase;
-  color: var(--scr-bg); background: rgb(238 244 255 / 0.92); transition: transform 0.12s, background-color 0.15s;
+
+/* Tela inicial de jogos */
+.scr-menu {
+  position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; padding: 3.2% 4% 3%;
+  background: radial-gradient(120% 90% at 50% 0%, #2a2f38, var(--scr-panel) 70%);
+  font-family: var(--mono); color: var(--scr-text);
 }
-.btn-glyph { display: grid; place-items: center; width: 1.45em; aspect-ratio: 1; border-radius: 50%; background: var(--scr-bg); color: #fff; font-family: var(--sans); font-weight: 600; font-size: 0.95em; }
-.screen-btn:hover { background: #fff; }
-.screen-btn:active { transform: scale(0.94); }
-.screen-btn:focus-visible { outline-color: #fff; outline-offset: 1px; }
+.scr-menu[hidden] { display: none; }
+.scr-top { align-self: stretch; display: flex; align-items: center; justify-content: space-between; }
+.scr-user { width: 4.2cqw; aspect-ratio: 1; border-radius: 50%; overflow: hidden; box-shadow: 0 0 0 0.35cqw rgb(255 255 255 / 0.85); background: #000; }
+.scr-user img { width: 100%; height: 100%; object-fit: cover; }
+.scr-clock { font-size: 2.1cqw; letter-spacing: 0.04em; font-variant-numeric: tabular-nums; opacity: 0.85; }
+.scr-name { margin: auto 0 1cqw; font-family: var(--sans); font-weight: 500; font-size: 2.6cqw; color: var(--scr-sel); }
+.scr-tiles { display: flex; gap: 1.8cqw; margin-bottom: auto; }
+.scr-tile {
+  position: relative; width: 9.4cqw; aspect-ratio: 1; border-radius: 0.8cqw; overflow: hidden;
+  background: #2f3540; box-shadow: 0 0.3cqw 0.8cqw rgb(0 0 0 / 0.35); transition: transform 0.15s var(--ease);
+}
+.scr-tile canvas { width: 100%; height: 100%; image-rendering: pixelated; display: block; }
+.scr-tile.sel { transform: scale(1.06); box-shadow: 0 0 0 0.35cqw #fff, 0 0 0 0.75cqw var(--scr-sel), 0 0.6cqw 1.2cqw rgb(0 0 0 / 0.4); }
+.js .scr-tile.sel { animation: sel-pulse 1.4s ease-in-out infinite; }
+@keyframes sel-pulse { 50% { box-shadow: 0 0 0 0.35cqw #fff, 0 0 0 0.75cqw #7fe0f4, 0 0.6cqw 1.2cqw rgb(0 0 0 / 0.4); } }
+.scr-tile:focus-visible { outline: 0.4cqw solid #fff; outline-offset: 0.6cqw; }
+.scr-hint { margin: 1.2cqw 0 0; align-self: stretch; display: flex; align-items: center; gap: 0.5em; font-size: 2cqw; letter-spacing: 0.06em; text-transform: uppercase; opacity: 0.9; }
+.scr-best { margin-left: auto; opacity: 0.7; font-variant-numeric: tabular-nums; }
+
+/* Placar e cartões durante o jogo */
+.scr-hud {
+  position: absolute; left: 3.5%; right: 3.5%; top: 4%; display: flex; justify-content: space-between; gap: 1em; pointer-events: none;
+  font-family: var(--mono); font-weight: 500; font-size: 2cqw; letter-spacing: 0.06em; text-transform: uppercase; color: rgb(238 244 255 / 0.88);
+  font-variant-numeric: tabular-nums;
+}
+.scr-hud[hidden] { display: none; }
+.scr-card {
+  position: absolute; left: 50%; top: 52%; transform: translate(-50%, -50%); width: 74%; padding: 2.4cqw 2.6cqw; border-radius: 1.2cqw; cursor: pointer;
+  background: rgb(20 23 28 / 0.88); box-shadow: 0 0 0 1px rgb(255 255 255 / 0.12); text-align: center; color: var(--scr-text);
+  backdrop-filter: blur(2px); -webkit-backdrop-filter: blur(2px);
+}
+.scr-card[hidden] { display: none; }
+.scr-card p { margin: 0; }
+.scr-card-title { font-family: var(--sans); font-weight: 600; font-size: 3.1cqw; line-height: 1.15; }
+.scr-card-text { margin-top: 0.8cqw !important; font-family: var(--sans); font-size: 2.1cqw; line-height: 1.35; opacity: 0.85; }
+.scr-card-hint { margin-top: 1.4cqw !important; display: flex; justify-content: center; align-items: center; gap: 0.45em; font-family: var(--mono); font-size: 1.85cqw; letter-spacing: 0.06em; text-transform: uppercase; opacity: 0.9; }
 
 /* ---------- Dock ---------- */
 .dock { position: fixed; left: 0; right: 0; bottom: max(20px, env(safe-area-inset-bottom)); z-index: var(--z-dock); display: flex; justify-content: center; pointer-events: none; }

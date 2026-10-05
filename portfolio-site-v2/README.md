@@ -6,9 +6,13 @@ O site é HTML, CSS e JavaScript puros, sem etapa de build. Funciona direto no G
 
 ## O que tem
 
-- **Início:** pôster "dados com *sentido.*" com um console no estilo Nintendo Switch no meio (desenhado em CSS, sem logo nem nome da marca). A tela roda um mini pipeline: blocos de dados caem e fazem as barras crescerem.
-  - **A** ou **+**: rodar ETL. **B**, **−** ou o botão de início: limpar. **X** ou **↑**: o pato pula. **Y** ou **↓**: cai um bloco. **← →**: o pato anda.
-  - Tocar na tela derruba um bloco na barra mais próxima. Com o foco no console, o teclado também funciona (setas, A, B, X e Y).
+- **Início:** pôster "dados com *sentido.*" com um console no estilo Nintendo Switch no meio (desenhado em CSS, sem logo nem nome da marca). A tela abre num menu com quatro jogos:
+  - **Limpeza de dados:** pegue as linhas verdes com a tabela e desvie das vermelhas (← → ou arrastar).
+  - **Pato debugger:** o pato voa entre as barras do gráfico (A ou toque).
+  - **Deploy em produção:** o pato pula os bugs, cada vez mais rápido (A ou toque).
+  - **Snake do pipeline:** a cobrinha come linhas de dados (direcionais ou deslizar).
+
+  Direcionais ou toque escolhem o jogo, **A** começa, **B** ou o botão de início voltam ao menu. Com o foco no console, o teclado também funciona. Os recordes ficam salvos no navegador de quem joga.
 - **Dock de vidro:** troca entre projetos, lab e perfil. Os endereços `#projetos`, `#lab` e `#perfil` funcionam como links diretos.
 - **Projetos:** cartões que saem da pasta da dock. Cada um abre uma janela com o estudo de caso (`#projetos/<id>`).
 - **Lab:** janelinhas com trechos reais de código dos repositórios menores, uma nota e um quadro de adesivos arrastáveis com as ferramentas da stack. Os adesivos ficam salvos no navegador de quem visita.
