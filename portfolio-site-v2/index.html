@@ -62,26 +62,38 @@
         </div>
 
         <div class="toy" data-toy>
-          <div class="toy-chain" aria-hidden="true">
-            <span class="toy-ring"></span>
-            <span class="toy-beads"></span>
-            <span class="toy-charm">pedro</span>
-          </div>
           <div class="toy-float">
-            <div class="toy-body">
-              <span class="toy-cap" aria-hidden="true"></span>
-              <div class="toy-bezel">
-                <div class="toy-screen">
-                  <canvas width="72" height="56" data-screen aria-label="Mini jogo: blocos de dados caem e fazem as barras do gráfico crescerem." role="img"></canvas>
-                  <div class="screen-hud" aria-live="polite"><span data-rows>0</span> linhas</div>
-                  <button class="screen-btn" type="button" data-run>rodar etl</button>
+            <div class="console" data-console>
+              <div class="joycon joycon--left" role="group" aria-label="Controle esquerdo">
+                <button class="jc-btn jc-minus" type="button" data-key="reset" aria-label="Menos: limpar o gráfico"></button>
+                <span class="jc-stick jc-stick--left" aria-hidden="true"></span>
+                <div class="jc-pad">
+                  <button class="jc-round jc-n" type="button" data-key="hop" aria-label="Cima: o pato pula"></button>
+                  <button class="jc-round jc-w" type="button" data-key="left" aria-label="Esquerda: o pato anda para a esquerda"></button>
+                  <button class="jc-round jc-e" type="button" data-key="right" aria-label="Direita: o pato anda para a direita"></button>
+                  <button class="jc-round jc-s" type="button" data-key="drop" aria-label="Baixo: cai um bloco de dados"></button>
+                </div>
+                <span class="jc-capture" aria-hidden="true"></span>
+              </div>
+
+              <div class="console-body">
+                <div class="console-screen">
+                  <canvas width="96" height="54" data-screen role="img" aria-label="Mini jogo na tela: blocos de dados caem e fazem as barras do gráfico crescerem."></canvas>
+                  <div class="screen-hud"><span data-rows>0</span> linhas</div>
+                  <button class="screen-btn" type="button" data-run><span class="btn-glyph" aria-hidden="true">A</span>rodar etl</button>
                 </div>
               </div>
-              <span class="toy-brand" aria-hidden="true">pipeline</span>
-              <div class="toy-keys">
-                <button class="toy-key" type="button" data-key="run" aria-label="Rodar ETL"></button>
-                <button class="toy-key" type="button" data-key="reset" aria-label="Limpar o gráfico"></button>
-                <button class="toy-key" type="button" data-key="hop" aria-label="Fazer o pato pular"></button>
+
+              <div class="joycon joycon--right" role="group" aria-label="Controle direito">
+                <button class="jc-btn jc-plus" type="button" data-key="run" aria-label="Mais: rodar ETL"></button>
+                <div class="jc-pad">
+                  <button class="jc-round jc-n" type="button" data-key="hop" aria-label="X: o pato pula"><span aria-hidden="true">X</span></button>
+                  <button class="jc-round jc-w" type="button" data-key="drop" aria-label="Y: cai um bloco de dados"><span aria-hidden="true">Y</span></button>
+                  <button class="jc-round jc-e" type="button" data-key="run" aria-label="A: rodar ETL"><span aria-hidden="true">A</span></button>
+                  <button class="jc-round jc-s" type="button" data-key="reset" aria-label="B: limpar o gráfico"><span aria-hidden="true">B</span></button>
+                </div>
+                <span class="jc-stick jc-stick--right" aria-hidden="true"></span>
+                <button class="jc-home" type="button" data-key="reset" aria-label="Início: recomeçar o jogo"></button>
               </div>
             </div>
           </div>

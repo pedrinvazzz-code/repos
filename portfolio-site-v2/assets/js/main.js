@@ -47,15 +47,16 @@
     $("[data-icon-lab]").innerHTML = icon("table-fill");
   }
 
-  /* ---------- Brinquedo: mini pipeline na tela LCD ---------- */
+  /* ---------- Console: mini pipeline na tela ---------- */
   const toy = { active: true };
   function initToy() {
     const canvas = $("[data-screen]");
     const ctx = canvas.getContext("2d");
     const rowsEl = $("[data-rows]");
     const css = getComputedStyle(document.documentElement);
-    const C = [0, 1, 2, 3].map((i) => css.getPropertyValue(`--lcd-${i}`).trim());
-    const W = 72, H = 56, GROUND = 50, TOP = 13, BAR_W = 8, GAP = 4;
+    const C = Object.fromEntries(["bg", "dot", "bar", "bar-top", "block", "ground", "floor", "duck", "beak"]
+      .map((k) => [k, css.getPropertyValue(`--scr-${k}`).trim()]));
+    const W = 96, H = 54, GROUND = 47, TOP = 12, BAR_W = 10, GAP = 6;
     const X0 = Math.round((W - (5 * BAR_W + 4 * GAP)) / 2);
     const MAX_H = GROUND - TOP - 3;
     const BASE = [5, 9, 10, 14, 4];
@@ -65,15 +66,17 @@
     let blocks = [];
     let sparks = [];
     let flash = 0;
-    const duck = { x: 6, dir: 1, step: 0, y: 0, vy: 0 };
+    const duck = { x: 6, dir: 1, step: 0, y: 0, vy: 0, dash: 0 };
     const DUCK = ["...XX.", "..XoXb", "XXXXX.", ".XXXX."];
     const LEGS = ["..X.X.", ".X..X."];
 
     const px = (x, y, w, h, c) => { ctx.fillStyle = c; ctx.fillRect(Math.round(x), Math.round(y), w, h); };
+    const barX = (i) => X0 + i * (BAR_W + GAP);
 
-    function spawn(bar) {
+    function spawn(bar, x) {
       const b = bar ?? Math.floor(Math.random() * 5);
-      blocks.push({ bar: b, x: X0 + b * (BAR_W + GAP) + 1 + Math.floor(Math.random() * (BAR_W - 3)), y: TOP - 2, vy: 0.2 });
+      const bx = x ?? barX(b) + 1 + Math.floor(Math.random() * (BAR_W - 3));
+      blocks.push({ bar: b, x: Math.min(Math.max(bx, barX(b)), barX(b) + BAR_W - 2), y: TOP - 2, vy: 0.2 });
     }
     function land(bar, x, y) {
       bars[bar]++;
@@ -92,13 +95,15 @@
         if (b.y >= target) { b.done = true; land(b.bar, b.x, target); }
       }
       blocks = blocks.filter((b) => !b.done);
-      sparks.forEach((s) => s.t--);
-      sparks = sparks.filter((s) => s.t > 0);
+      sparks.forEach((sp) => sp.t--);
+      sparks = sparks.filter((sp) => sp.t > 0);
       if (flash) flash--;
-      duck.x += 0.16 * duck.dir;
-      duck.step += 0.08;
-      if (duck.x > W - 8) duck.dir = -1;
-      if (duck.x < 2) duck.dir = 1;
+      const speed = duck.dash > 0 ? 0.7 : 0.16;
+      if (duck.dash > 0) duck.dash--;
+      duck.x += speed * duck.dir;
+      duck.step += duck.dash > 0 ? 0.25 : 0.08;
+      if (duck.x > W - 8) { duck.x = W - 8; duck.dir = -1; }
+      if (duck.x < 2) { duck.x = 2; duck.dir = 1; }
       if (duck.y < 0 || duck.vy) {
         duck.vy += 0.12;
         duck.y += duck.vy;
@@ -106,33 +111,30 @@
       }
     }
     function draw() {
-      const bg = flash ? C[3] : C[0];
-      const fg = flash ? C[0] : C[3];
-      const mid = flash ? C[1] : C[2];
+      const bg = flash ? C.bar : C.bg;
       px(0, 0, W, H, bg);
-      for (let x = 0; x < W; x += 2) px(x, TOP - 4, 1, 1, C[1]);
+      for (let x = 1; x < W; x += 3) px(x, TOP - 4, 1, 1, C.dot);
       bars.forEach((h, i) => {
-        const x = X0 + i * (BAR_W + GAP);
-        px(x, GROUND - h, BAR_W, h, mid);
-        px(x, GROUND - h, BAR_W, 1, fg);
+        px(barX(i), GROUND - h, BAR_W, h, flash ? C["bar-top"] : C.bar);
+        px(barX(i), GROUND - h, BAR_W, 1, C["bar-top"]);
       });
-      for (const b of blocks) px(b.x, b.y, 2, 2, fg);
-      for (const s of sparks) {
-        const d = 9 - s.t;
-        px(s.x - d, s.y - 1, 1, 1, fg);
-        px(s.x + 1 + d, s.y - 1, 1, 1, fg);
-        px(s.x + 0.5, s.y - 1 - d, 1, 1, fg);
+      for (const b of blocks) px(b.x, b.y, 2, 2, C.block);
+      for (const sp of sparks) {
+        const d = 9 - sp.t;
+        px(sp.x - d, sp.y - 1, 1, 1, C["bar-top"]);
+        px(sp.x + 1 + d, sp.y - 1, 1, 1, C["bar-top"]);
+        px(sp.x + 0.5, sp.y - 1 - d, 1, 1, C["bar-top"]);
       }
-      px(0, GROUND, W, 1, fg);
-      for (let x = 0; x < W; x++) for (let y = GROUND + 1; y < H; y++) if ((x + y) % 2 === 0) px(x, y, 1, 1, C[1]);
-      const rowsArt = [...DUCK, LEGS[Math.floor(duck.step) % 2]];
+      px(0, GROUND, W, 1, C.ground);
+      for (let x = 0; x < W; x++) for (let y = GROUND + 1; y < H; y++) if ((x + y) % 2 === 0) px(x, y, 1, 1, C.floor);
+      const art = [...DUCK, LEGS[Math.floor(duck.step) % 2]];
       const dx = Math.round(duck.x);
-      const dy = GROUND - rowsArt.length + Math.round(duck.y);
-      rowsArt.forEach((row, ry) => {
+      const dy = GROUND - art.length + Math.round(duck.y);
+      art.forEach((row, ry) => {
         [...row].forEach((ch, rx) => {
           if (ch === ".") return;
           const col = duck.dir > 0 ? rx : row.length - 1 - rx;
-          px(dx + col, dy + ry, 1, 1, ch === "o" ? bg : ch === "b" ? mid : fg);
+          px(dx + col, dy + ry, 1, 1, ch === "o" ? bg : ch === "b" ? C.beak : C.duck);
         });
       });
       rowsEl.textContent = String(rows);
@@ -160,11 +162,16 @@
       if (!raf) { last = 0; raf = requestAnimationFrame(frame); }
     };
 
+    const grow = (i, n) => { bars[i] = Math.min(MAX_H, bars[i] + n); rows += n; };
     const actions = {
       run() {
-        if (reduceMotion) { bars = bars.map((h) => Math.min(MAX_H, h + 2)); rows += 10; draw(); return; }
+        if (reduceMotion) { bars.forEach((_, i) => grow(i, 2)); draw(); return; }
         for (let i = 0; i < 10; i++) setTimeout(() => spawn(i % 5), i * 70);
         duck.vy = -1.1;
+      },
+      drop(bar, x) {
+        if (reduceMotion) { grow(bar ?? Math.floor(Math.random() * 5), 1); draw(); return; }
+        spawn(bar, x);
       },
       reset() {
         bars = BASE.slice();
@@ -173,10 +180,29 @@
         flash = reduceMotion ? 0 : 4;
         draw();
       },
-      hop() { if (!reduceMotion) duck.vy = -1.5; }
+      hop() { if (!reduceMotion && duck.y === 0) duck.vy = -1.5; },
+      left() { duck.dir = -1; duck.dash = reduceMotion ? 0 : 18; if (reduceMotion) { duck.x = Math.max(2, duck.x - 8); draw(); } },
+      right() { duck.dir = 1; duck.dash = reduceMotion ? 0 : 18; if (reduceMotion) { duck.x = Math.min(W - 8, duck.x + 8); draw(); } }
     };
-    $("[data-run]").addEventListener("click", actions.run);
+    $("[data-run]").addEventListener("click", () => actions.run());
     $$("[data-key]").forEach((b) => b.addEventListener("click", () => actions[b.dataset.key]()));
+
+    // Tocar na tela derruba um bloco na barra mais próxima.
+    canvas.addEventListener("click", (e) => {
+      const r = canvas.getBoundingClientRect();
+      const x = ((e.clientX - r.left) / r.width) * W;
+      const bar = Math.max(0, Math.min(4, Math.round((x - X0 - BAR_W / 2) / (BAR_W + GAP))));
+      actions.drop(bar, Math.round(x) - 1);
+    });
+
+    // Com o foco no console, o teclado também joga.
+    const KEYS = { ArrowLeft: "left", ArrowRight: "right", ArrowUp: "hop", ArrowDown: "drop", a: "run", b: "reset", x: "hop", y: "drop" };
+    $("[data-console]").addEventListener("keydown", (e) => {
+      const action = KEYS[e.key.length === 1 ? e.key.toLowerCase() : e.key];
+      if (!action || e.metaKey || e.ctrlKey || e.altKey) return;
+      e.preventDefault();
+      actions[action]();
+    });
 
     new IntersectionObserver(([e]) => { visible = e.isIntersecting; if (visible) toy.start(); }).observe(canvas);
     document.addEventListener("visibilitychange", () => { if (!document.hidden) toy.start(); });
