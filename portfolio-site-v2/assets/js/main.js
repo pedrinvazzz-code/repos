@@ -446,6 +446,62 @@
     showMenu();
   }
 
+  /* ---------- Chaveiro do console ---------- */
+  // Um pêndulo amortecido: o mouse passando empurra, dá para puxar e soltar, e os botões do console chacoalham.
+  function initKeychain() {
+    const swing = $("[data-keychain]");
+    const anchor = $("[data-kc-anchor]");
+    if (!swing || !anchor) return;
+    const rest = () => (parseFloat(getComputedStyle(swing).getPropertyValue("--kc-rest")) || 0) * Math.PI / 180;
+    let a = rest(), v = 0, raf = 0, last = 0, drag = null;
+    const set = () => { swing.style.transform = `rotate(${a.toFixed(4)}rad)`; };
+    function frame(t) {
+      const dt = Math.min(0.033, (t - (last || t)) / 1000) || 0.016;
+      last = t;
+      const r = rest();
+      if (drag) {
+        // Segurando: o chaveiro segue o dedo, com um pouco de mola.
+        v += ((drag.target - a) * 260 - v * 18) * dt;
+      } else {
+        v += (-46 * Math.sin(a - r) - 2 * v) * dt;
+      }
+      a += v * dt;
+      set();
+      if (drag || Math.abs(a - r) > 0.0006 || Math.abs(v) > 0.002) raf = requestAnimationFrame(frame);
+      else { raf = 0; last = 0; a = r; set(); }
+    }
+    const kick = (dv) => {
+      if (reduceMotion) return;
+      v += dv;
+      if (!raf) raf = requestAnimationFrame(frame);
+    };
+    const pivot = () => { const p = anchor.getBoundingClientRect(); return { x: p.left, y: p.top }; };
+    const angleTo = (x, y) => { const p = pivot(); return Math.atan2(p.x - x, y - p.y); };
+
+    swing.addEventListener("pointermove", (e) => {
+      if (e.pointerType === "mouse" && !drag) kick(Math.max(-1.2, Math.min(1.2, -e.movementX * 0.05)));
+    });
+    swing.addEventListener("pointerdown", (e) => {
+      if (reduceMotion || e.button > 0) return;
+      e.preventDefault();
+      try { swing.setPointerCapture(e.pointerId); } catch { /* segue sem captura */ }
+      drag = { offset: a - angleTo(e.clientX, e.clientY), target: a };
+      kick(0);
+    });
+    swing.addEventListener("pointermove", (e) => {
+      if (!drag) return;
+      drag.target = Math.max(-1.3, Math.min(1.3, angleTo(e.clientX, e.clientY) + drag.offset));
+    });
+    const release = () => { if (drag) { drag = null; kick(0); } };
+    swing.addEventListener("pointerup", release);
+    swing.addEventListener("pointercancel", release);
+    // Apertar os botões do console chacoalha as chaves.
+    $("[data-console]").addEventListener("pointerdown", (e) => { if (e.target.closest("[data-btn]")) kick((Math.random() < 0.5 ? -1 : 1) * (0.9 + Math.random() * 0.6)); });
+    window.addEventListener("keydown", (e) => { if (toy.active && !e.repeat && /^Arrow|^[zxas ]$|Enter/i.test(e.key)) kick((Math.random() < 0.5 ? -1 : 1) * 0.7); });
+    window.addEventListener("resize", () => { if (!raf) { a = rest(); set(); } });
+    set();
+  }
+
   /* ---------- Artes do fundo, reveladas pelo mouse ou pelo dedo ---------- */
   // Cada painel tem uma camada de artes escondida; um círculo em volta do mouse (ou do dedo) mostra o que está embaixo.
   // No celular, sem toque, o círculo passeia sozinho de arte em arte.
@@ -1274,6 +1330,7 @@
     initBoard();
     initToy();
     initArts();
+    initKeychain();
     initNav();
     route();
   }
