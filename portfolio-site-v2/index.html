@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Pedro Henrique | Engenharia de Dados</title>
+  <meta name="description" content="Pedro Henrique, estudante de Gestão da Informação na UFU. Pipelines ETL, bancos de dados e dashboards.">
+  <meta name="theme-color" content="#f7f7f5">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Pedro Henrique | Engenharia de Dados">
+  <meta property="og:description" content="Pipelines ETL, bancos de dados e dashboards. Estudante de Gestão da Informação na UFU.">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="preload" href="assets/fonts/dm-sans-300-600.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="assets/css/style.css">
+  <script>document.documentElement.classList.add("js");</script>
+  <script src="assets/js/icons.js" defer></script>
+  <script src="assets/js/data.js" defer></script>
+  <script src="assets/js/main.js" defer></script>
+</head>
+<body>
+  <!-- Filtro que "pixeliza" os títulos em serifa (mesma técnica do site de referência). -->
+  <svg class="defs" width="0" height="0" aria-hidden="true" focusable="false">
+    <filter id="pixelate" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB">
+      <feMorphology in="SourceGraphic" operator="dilate" radius="0.6" result="fat"/>
+      <feFlood x="1" y="1" width="1" height="1"/>
+      <feComposite width="3" height="3"/>
+      <feTile result="dots"/>
+      <feComposite in="fat" in2="dots" operator="in"/>
+      <feMorphology operator="dilate" radius="1"/>
+    </filter>
+    <filter id="pixelate-sm" x="0" y="0" width="100%" height="100%" color-interpolation-filters="sRGB">
+      <feMorphology in="SourceGraphic" operator="dilate" radius="0.45" result="fat"/>
+      <feFlood x="1" y="1" width="1" height="1"/>
+      <feComposite width="2" height="2"/>
+      <feTile result="dots"/>
+      <feComposite in="fat" in2="dots" operator="in"/>
+      <feMorphology operator="dilate" radius="0.7"/>
+    </filter>
+  </svg>
+
+  <a class="skip" href="#painel">Pular para o conteúdo</a>
+
+  <header class="top-nav">
+    <a class="nav-left" href="#" data-go="inicio" aria-label="Pedro Henrique, voltar ao início">
+      <span class="nav-logo" aria-hidden="true">P</span>
+      <span class="nav-identity">
+        <span class="nav-name" data-name>Pedro Henrique</span>
+        <span class="nav-role" data-role>engenharia de dados</span>
+      </span>
+    </a>
+    <nav class="nav-right" aria-label="Contato" data-nav-links></nav>
+  </header>
+
+  <main class="main" id="painel">
+    <!-- Início -->
+    <section class="panel" id="panel-inicio" data-panel="inicio" aria-label="Início">
+      <div class="poster">
+        <div class="poster-side poster-left">
+          <p class="poster-hello" data-greeting>olá,</p>
+          <p class="poster-big poster-big--sans" data-poster-left>dados com</p>
+          <p class="poster-sub" data-poster-sub-left>engenharia de dados</p>
+        </div>
+
+        <div class="toy" data-toy>
+          <div class="toy-chain" aria-hidden="true">
+            <span class="toy-ring"></span>
+            <span class="toy-beads"></span>
+            <span class="toy-charm">pedro</span>
+          </div>
+          <div class="toy-float">
+            <div class="toy-body">
+              <span class="toy-cap" aria-hidden="true"></span>
+              <div class="toy-bezel">
+                <div class="toy-screen">
+                  <canvas width="72" height="56" data-screen aria-label="Mini jogo: blocos de dados caem e fazem as barras do gráfico crescerem." role="img"></canvas>
+                  <div class="screen-hud" aria-live="polite"><span data-rows>0</span> linhas</div>
+                  <button class="screen-btn" type="button" data-run>rodar etl</button>
+                </div>
+              </div>
+              <span class="toy-brand" aria-hidden="true">pipeline</span>
+              <div class="toy-keys">
+                <button class="toy-key" type="button" data-key="run" aria-label="Rodar ETL"></button>
+                <button class="toy-key" type="button" data-key="reset" aria-label="Limpar o gráfico"></button>
+                <button class="toy-key" type="button" data-key="hop" aria-label="Fazer o pato pular"></button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="poster-side poster-right">
+          <p class="poster-hello poster-hello--spacer" aria-hidden="true">&nbsp;</p>
+          <p class="poster-big poster-big--serif" data-poster-right>sentido.</p>
+          <p class="poster-sub" data-poster-sub-right></p>
+        </div>
+        <p class="poster-sub poster-sub--merged" data-poster-sub-merged></p>
+      </div>
+    </section>
+
+    <!-- Projetos -->
+    <section class="panel" id="panel-projetos" data-panel="projetos" aria-labelledby="projetos-title" hidden>
+      <h1 class="sr-only" id="projetos-title">Projetos</h1>
+      <div class="works-grid" data-works></div>
+    </section>
+
+    <!-- Laboratório -->
+    <section class="panel" id="panel-lab" data-panel="lab" aria-labelledby="lab-title" hidden>
+      <div class="lab">
+        <h1 class="lab-title pixel-title" id="lab-title"><span data-lab-title></span><span class="lab-dots" aria-hidden="true"><i>.</i><i>.</i><i>.</i></span></h1>
+        <p class="lab-sub" data-lab-sub></p>
+        <div class="lab-grid" data-lab-grid></div>
+
+        <section class="board" aria-labelledby="board-title">
+          <h2 class="board-title" id="board-title" data-board-title></h2>
+          <div class="board-desk" data-board>
+            <div class="board-sheet">
+              <div class="board-sheet-head"><span>adesivos.png</span><button class="board-reset" type="button" data-board-reset>limpar</button></div>
+              <div class="board-stickers" data-stickers></div>
+              <p class="board-hint">Arraste um adesivo para o papel, ou toque nele.</p>
+            </div>
+            <div class="board-paper" data-paper>
+              <span class="tape" aria-hidden="true"></span>
+              <p class="paper-head">para fazer:</p>
+              <ul class="paper-todo" data-todo></ul>
+            </div>
+          </div>
+        </section>
+      </div>
+    </section>
+
+    <!-- Perfil -->
+    <section class="panel" id="panel-perfil" data-panel="perfil" aria-labelledby="perfil-title" hidden>
+      <div class="profile">
+        <div class="prints" data-prints></div>
+        <div class="profile-col">
+          <h1 class="profile-heading pixel-title" id="perfil-title" data-profile-heading>Sobre mim</h1>
+          <div data-profile-body></div>
+          <div class="facts" data-facts></div>
+          <div class="txt-card links-card">
+            <span class="txt-name">links.txt</span>
+            <ul class="links-list" data-profile-links></ul>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <nav class="dock" aria-label="Seções">
+    <div class="dock-inner">
+      <button class="dock-item" type="button" data-go="projetos" aria-controls="panel-projetos">
+        <span class="dock-icon dock-icon--folder" data-icon-folder aria-hidden="true"></span>
+        <span class="dock-label">projetos</span>
+      </button>
+      <button class="dock-item" type="button" data-go="lab" aria-controls="panel-lab">
+        <span class="dock-icon dock-icon--lab" data-icon-lab aria-hidden="true"></span>
+        <span class="dock-label">lab</span>
+      </button>
+      <button class="dock-item" type="button" data-go="perfil" aria-controls="panel-perfil">
+        <span class="dock-icon dock-icon--profile" aria-hidden="true"><img src="assets/img/avatar.webp" alt="" width="54" height="54"></span>
+        <span class="dock-label">perfil</span>
+      </button>
+    </div>
+  </nav>
+
+  <p class="colophon" aria-hidden="true">feito com claude<br>atualizado em <span data-updated>10/26</span></p>
+
+  <div class="case" data-case role="dialog" aria-modal="true" aria-labelledby="case-title" hidden>
+    <div class="case-backdrop" data-close-case></div>
+    <article class="case-window" data-case-window></article>
+  </div>
+</body>
+</html>
