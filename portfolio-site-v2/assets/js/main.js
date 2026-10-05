@@ -651,14 +651,18 @@
   let caseId = null;
 
   // Toda imagem de projeto leva o aviso de dados fictícios, junto da legenda.
-  const fakeTag = () => D.mediaNote ? `<span class="fake-tag">${icon("info-fill")}${esc(D.mediaNote)}</span>` : "";
-  const caption = (m) => `<figcaption>${fakeTag()}${m.caption ? `<span>${esc(m.caption)}</span>` : ""}</figcaption>`;
-  function renderMedia(m) {
+  // O projeto pode trocar o aviso (por exemplo, quando os dados são públicos e reais).
+  const fakeTag = (p = {}) => {
+    const text = p.mediaNote || D.mediaNote;
+    return text ? `<span class="fake-tag${p.realData ? " fake-tag--real" : ""}">${icon("info-fill")}${esc(text)}</span>` : "";
+  };
+  const caption = (m, p) => `<figcaption>${fakeTag(p)}${m.caption ? `<span>${esc(m.caption)}</span>` : ""}</figcaption>`;
+  function renderMedia(m, p) {
     if (m.type === "phones") {
       return `<figure class="case-figure"><div class="case-phones">${m.items.map((it) =>
-        `<img src="${it.src}" width="${it.width}" height="${it.height}" alt="${esc(it.alt)}" loading="lazy" decoding="async">`).join("")}</div>${caption(m)}</figure>`;
+        `<img src="${it.src}" width="${it.width}" height="${it.height}" alt="${esc(it.alt)}" loading="lazy" decoding="async">`).join("")}</div>${caption(m, p)}</figure>`;
     }
-    return `<figure class="case-figure"><img src="${m.src}" width="${m.width}" height="${m.height}" alt="${esc(m.alt)}" loading="lazy" decoding="async">${caption(m)}</figure>`;
+    return `<figure class="case-figure"><img src="${m.src}" width="${m.width}" height="${m.height}" alt="${esc(m.alt)}" loading="lazy" decoding="async">${caption(m, p)}</figure>`;
   }
 
   function openCase(id) {
@@ -682,9 +686,9 @@
           <h1 class="case-title" id="case-title" tabindex="-1">${esc(p.title)}</h1>
           <p class="case-tagline">${esc(p.tagline)}</p>
           <ul class="chips case-chips" aria-label="Ferramentas">${p.stack.map(stackChip).join("")}</ul>
-          ${first ? renderMedia(first) : ""}
+          ${first ? renderMedia(first, p) : ""}
           <div class="case-secs">${p.sections.map((s) => `<section class="case-sec"><h2>${esc(s.heading)}</h2><p>${esc(s.body)}</p></section>`).join("")}</div>
-          ${rest.map(renderMedia).join("")}
+          ${rest.map((m) => renderMedia(m, p)).join("")}
           <div class="case-actions">
             <a class="btn btn-accent" href="${p.url}" target="_blank" rel="noopener">Ver no GitHub ${icon("arrow-up-right")}</a>
             <button class="btn btn-ghost" type="button" data-close-case>Fechar</button>

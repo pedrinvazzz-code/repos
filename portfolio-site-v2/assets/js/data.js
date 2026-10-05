@@ -49,7 +49,8 @@ window.SITE = {
   // Stack da página inicial, em teclas. Use as chaves de "tools" acima.
   homeStack: ["python", "pandas", "sql", "postgresql", "supabase", "databricks", "pyspark", "powerbi", "githubactions", "git"],
 
-  // Aviso que aparece junto de toda imagem de projeto.
+  // Aviso que aparece junto de toda imagem de projeto. Um projeto pode trocar o texto com "mediaNote"
+  // (e "realData: true" para usar a etiqueta verde de dados reais).
   mediaNote: "dados fictícios",
 
   projects: [
@@ -111,6 +112,8 @@ window.SITE = {
       title: "Lakehouse de voos no Databricks",
       file: "voebem-analytics.md",
       category: "pessoal",
+      mediaNote: "dados públicos da ANAC",
+      realData: true,
       tools: ["databricks", "pyspark", "sql"],
       // O principal aprendizado do projeto foi o Databricks, então ele vai na capa.
       cover: { icon: "databricks", label: "Databricks", color: "#FF3621", bg: "radial-gradient(80% 100% at 50% 0%, #ffffff, #fdeeea 75%)" },
@@ -167,7 +170,7 @@ window.SITE = {
   logging.info(f"Extracting data from {file_path}")
   try:
       df = pd.read_csv(file_path)
-      logging.info(f"Data extracted succesfully!")
+      logging.info(f"Data extracted successfully!")
       return df
   except Exception as e:
     logging.error(f"Error extracting data from {file_path} : {e}")
